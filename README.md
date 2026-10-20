@@ -453,3 +453,28 @@ Figma MCP(`get_design_context`, 스크린샷)로 실제 프레임·레이어 속
   3. 비디오 래퍼(`videoWrapEl`)의 역스케일 비율을 $videoScale / clipScale$로 정확하게 매핑하여, 스크롤 전체 구간에서 비디오의 절대 크기가 $0.7 + 0.3p$로 완벽하게 선형 확장되도록 동기화했습니다.
   4. 좌우 사이드 카드 이동, 중앙 마스크 확장, 내부 비디오 줌, 인용구 텍스트 페이드가 모두 동일한 $p$에 맞춰 균일한 속도로 동작하므로 가속이나 뚝뚝 끊김 없이 부드럽게 재생됩니다.
 
+---
+
+## 21. 코어 섹션 태블릿 가로 모드 중앙 영상 미세 걸림(Micro-stutter) 완전 해소
+
+### 1) 미세 걸림(Micro-stutter / Hitch)의 정밀 원인 분석
+1. **스크롤 재개/방향 전환 시 초기 $\Delta t$ 계산 오류로 인한 1프레임 정지 현상**:
+   - `requestTick()`에서 유휴 상태(`!isAnimating`) 후 스크롤이 감지될 때 `lastTime = performance.now()`를 즉시 기록했습니다.
+   - 직후 실행된 `tick(now)`에서 경과시간 $\Delta t = (now - lastTime)$이 $0.0003 \sim 0.002$초(1ms 미만)로 평가되었습니다.
+   - 지수 감쇠 보간 공식 $factor = 1 - e^{-\lambda \cdot \Delta t}$에 의해 **첫 프레임 보간 계수가 거의 0에 수렴(~0.4%)**하여 영상 움직임이 1프레임 동안 정지(Dead Zone)한 뒤, 다음 프레임(16.6ms 후)에서 갑자기 21%로 건너뛰면서 '미세하게 턱 걸리는' 느낌을 유발했습니다.
+2. **매 프레임 불필요한 DOM 인라인 스타일 재작성**:
+   - `applyCoreRender` 내부에서 이미 CSS 고정값인 `frame30El.style.transform = 'translate3d(-50%, 0, 0)'`를 매 프레임마다 재할당하여 WebKit 스타일 재계산 부하를 유발했습니다.
+3. **WebKit GPU 컴포지터 레이어 지속성 누락**:
+   - 모바일 요소(`moVideoBox`, `moVideoInner`)에는 `will-change: transform`이 지정되어 매끄럽게 동작했던 반면, PC/태블릿 가로 모드의 `.diheir-core__clip` 및 `.diheir-core__video-wrap`에는 `will-change` 속성이 선언되지 않아 서브픽셀 래스터 버퍼 승격 시 미세한 경계 떨림이 발생했습니다.
+
+### 2) 조치 사항
+1. **초기 $\Delta t$ 데드존 방지 및 120Hz ProMotion 주사율 하한선 보정**:
+   - 애니메이션 재개 시 `lastTime = 0`으로 초기화하고, `tick(now)` 첫 프레임에서 `lastTime = now - 16.67`로 1프레임 기준시간을 부여하여 재개 즉시 자연스럽게 이동하도록 개선했습니다.
+   - `dt` 최소 하한선(`0.0083s`, 120fps)과 최대 상한선(`0.05s`, 50ms)을 설정하여 극단적인 주사율 편차 및 순간 정지 후 도약 현상을 방지했습니다.
+   - 감쇠 계수 $\lambda$를 16으로 최적화하여 손가락 스크롤과의 추종성을 높이면서도 관성 스크롤 및 정지 시 부드럽게 감속 수렴하도록 했습니다.
+2. **GPU 가속 명시(`will-change: transform`)**:
+   - `#deheir_page .diheir-core__clip` 및 `#deheir_page .diheir-core__video-wrap`에 `will-change: transform;`을 부여하고, `.diheir-core__quote-wrap`에 `will-change: transform, opacity;`를 적용하여 레이어 재할당 비용을 제거했습니다.
+3. **불필요한 DOM 인라인 스타일 재작성 제거**:
+   - `applyCoreRender` 루프 내 불필요한 `frame30El.style.transform` 재할당 코드를 제거했습니다.
+
+

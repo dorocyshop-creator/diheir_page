@@ -530,6 +530,7 @@ body::-webkit-scrollbar {
   transform-origin: center center;
   overflow: hidden;
   pointer-events: none;
+  will-change: transform;
 }
 #deheir_page .diheir-core__bg {
   position: absolute;
@@ -545,6 +546,7 @@ body::-webkit-scrollbar {
   transform: translate3d(-50%, -50%, 0);
   transform-origin: center center;
   pointer-events: none;
+  will-change: transform;
 }
 #deheir_page .diheir-core__static-img {
   position: absolute;
@@ -588,7 +590,7 @@ body::-webkit-scrollbar {
   z-index: 10;
   opacity: var(--core-text-op, 1);
   pointer-events: none;
-  will-change: opacity;
+  will-change: transform, opacity;
 }
 #deheir_page .diheir-core__quote {
   width: 1042px;
@@ -3195,11 +3197,6 @@ body::-webkit-scrollbar {
           pcSideR[j].style.transform = 'translate3d(' + rightX.toFixed(2) + 'px, 0, 0)';
         }
 
-        // Frame30은 위치만 유지 (scale 중첩 및 다중 복합 변환 제거로 WebKit 래스터 병목 해소)
-        if (frame30El) {
-          frame30El.style.transform = 'translate3d(-50%, 0, 0)';
-        }
-
         // Clip aperture scale & video counter-scale (진행률 0.0 -> 1.0 완전 선형 동기화)
         var clipScaleX = 0.7 + (scaleXTargetPC - 0.7) * progress;
         var clipScaleY = 0.7 + (scaleYTargetPC - 0.7) * progress;
@@ -3307,9 +3304,12 @@ body::-webkit-scrollbar {
 
     function tick(now) {
       if (!isAnimating) return;
-      if (!lastTime) lastTime = now;
+      if (!lastTime) {
+        lastTime = now - 16.67;
+      }
       var dt = (now - lastTime) / 1000;
-      if (dt > 0.1) dt = 0.1;
+      if (dt > 0.05) dt = 0.05;
+      if (dt < 0.005) dt = 0.0083;
       lastTime = now;
 
       // 프레임 드롭 감지
@@ -3346,12 +3346,13 @@ body::-webkit-scrollbar {
         applyCoreRender(renderProgress);
         isAnimating = false;
         rafId = null;
+        lastTime = 0;
         maybeUpdateHudUI(now, true);
         return;
       }
 
       // 화면 주사율(60Hz, 120Hz ProMotion) 무관 경과시간(dt) 기반 지수 감쇠 보간
-      var lambda = 14;
+      var lambda = 16;
       var factor = 1 - Math.exp(-lambda * dt);
       renderProgress += diff * factor;
 
@@ -3378,13 +3379,14 @@ body::-webkit-scrollbar {
         renderProgress = targetProgress;
         applyCoreRender(renderProgress);
         isAnimating = false;
+        lastTime = 0;
         maybeUpdateHudUI(performance.now(), true);
         return;
       }
 
       if (!isAnimating) {
         isAnimating = true;
-        lastTime = performance.now();
+        lastTime = 0;
         rafId = requestAnimationFrame(tick);
       }
     }
