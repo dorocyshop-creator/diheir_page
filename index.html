@@ -476,8 +476,8 @@ body::-webkit-scrollbar {
 #deheir_page .diheir-core {
   position: relative;
   width: 100%;
-  height: 300vh;
-  min-height: 2200px;
+  height: 350vh;
+  min-height: 2600px;
   background: #9f9f8b;
   padding: 0;
   overflow: visible !important;
@@ -493,6 +493,9 @@ body::-webkit-scrollbar {
   overflow: hidden;
   background: #9f9f8b;
   z-index: 10;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
 }
 #deheir_page .diheir-core__stage {
   position: absolute;
@@ -2801,8 +2804,18 @@ body::-webkit-scrollbar {
         nav.classList.remove('is-dark-menu-text', 'is-dark-text');
       }
     };
-    window.addEventListener('scroll', updateNavThemeState, { passive: true });
-    window.addEventListener('resize', updateNavThemeState, { passive: true });
+    var navTicking = false;
+    function requestNavThemeUpdate() {
+      if (!navTicking) {
+        navTicking = true;
+        requestAnimationFrame(function () {
+          updateNavThemeState();
+          navTicking = false;
+        });
+      }
+    }
+    window.addEventListener('scroll', requestNavThemeUpdate, { passive: true });
+    window.addEventListener('resize', requestNavThemeUpdate);
     updateNavThemeState();
   }
 
@@ -3187,8 +3200,21 @@ body::-webkit-scrollbar {
 
       if (!isMobile) {
         // PC & 태블릿 가로 (GPU 가속 scale & translate3d)
-        var leftX = (-473 - (actualWidth - 1920) / 2) * progress;
-        var rightX = (465 + (actualWidth - 1920) / 2) * progress;
+        // 0.00 ~ 0.04: 진입 안정화 (초기 상태 안착)
+        // 0.04 ~ 0.88: 부드러운 코사인 가감속 확대 (속도 급변 및 턱 걸림 방지)
+        // 0.88 ~ 1.00: 전체화면 안정적 감상 및 유지 버퍼
+        var p;
+        if (progress < 0.04) {
+          p = 0;
+        } else if (progress > 0.88) {
+          p = 1;
+        } else {
+          var t = (progress - 0.04) / 0.84;
+          p = 0.5 - 0.5 * Math.cos(t * Math.PI);
+        }
+
+        var leftX = (-473 - (actualWidth - 1920) / 2) * p;
+        var rightX = (465 + (actualWidth - 1920) / 2) * p;
 
         for (var i = 0; i < pcSideL.length; i++) {
           pcSideL[i].style.transform = 'translate3d(' + leftX.toFixed(2) + 'px, 0, 0)';
@@ -3197,10 +3223,10 @@ body::-webkit-scrollbar {
           pcSideR[j].style.transform = 'translate3d(' + rightX.toFixed(2) + 'px, 0, 0)';
         }
 
-        // Clip aperture scale & video counter-scale (진행률 0.0 -> 1.0 완전 선형 동기화)
-        var clipScaleX = 0.7 + (scaleXTargetPC - 0.7) * progress;
-        var clipScaleY = 0.7 + (scaleYTargetPC - 0.7) * progress;
-        var videoScale = 0.7 + 0.3 * progress;
+        // Clip aperture scale & video counter-scale (eased p 동기화)
+        var clipScaleX = 0.7 + (scaleXTargetPC - 0.7) * p;
+        var clipScaleY = 0.7 + (scaleYTargetPC - 0.7) * p;
+        var videoScale = 0.7 + 0.3 * p;
 
         if (clipEl) {
           clipEl.style.transform = 'translate3d(-50%, -50%, 0) scale(' + clipScaleX.toFixed(5) + ', ' + clipScaleY.toFixed(5) + ')';
@@ -3216,8 +3242,8 @@ body::-webkit-scrollbar {
           }
         }
 
-        // Text opacity & scale: progress 0.52~0.92 부드러운 페이드아웃 및 비디오 스케일 동기화
-        var textOp = progress < 0.52 ? 1 : Math.max(0, 1 - (progress - 0.52) / 0.40);
+        // Text opacity & scale: p 0.52~0.92 부드러운 페이드아웃 및 비디오 스케일 동기화
+        var textOp = p < 0.52 ? 1 : Math.max(0, 1 - (p - 0.52) / 0.40);
         if (quoteWrapEl) {
           quoteWrapEl.style.opacity = textOp.toFixed(4);
           quoteWrapEl.style.transform = 'scale(' + videoScale.toFixed(5) + ')';
@@ -3243,7 +3269,6 @@ body::-webkit-scrollbar {
           if (progress < 0.636) {
             moVideoBox.style.opacity = '0';
             moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
-            moVideoBox.style.borderRadius = '8px';
             if (moVideoInner) moVideoInner.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
             if (moQuote) {
               moQuote.style.opacity = '1';
@@ -3253,7 +3278,6 @@ body::-webkit-scrollbar {
             var vOp = (progress - 0.636) / 0.028;
             moVideoBox.style.opacity = vOp.toFixed(4);
             moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
-            moVideoBox.style.borderRadius = '8px';
             if (moVideoInner) moVideoInner.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
             if (moQuote) {
               moQuote.style.opacity = '1';
@@ -3270,8 +3294,6 @@ body::-webkit-scrollbar {
             var invScaleY = isNoCounter ? 1 : 1 / curScaleY;
 
             moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(' + curScaleX.toFixed(5) + ', ' + curScaleY.toFixed(5) + ')';
-            // 리플로우 및 GPU 마스크 재생성 방지: 확대 중에는 고정 8px 유지, 98% 이상에서만 0px로 전환
-            moVideoBox.style.borderRadius = (progress >= 0.98) ? '0px' : '8px';
 
             if (moVideoInner) {
               moVideoInner.style.transform = 'translate3d(-50%, -50%, 0) scale(' + invScaleX.toFixed(5) + ', ' + invScaleY.toFixed(5) + ')';
@@ -3285,7 +3307,6 @@ body::-webkit-scrollbar {
           } else {
             // 전체화면 유지 구간 (0.927 ~ 1.000)
             moVideoBox.style.opacity = '1';
-            moVideoBox.style.borderRadius = '0px';
             var invFinalX = isNoCounter ? 1 : 1 / scaleXTargetMO;
             var invFinalY = isNoCounter ? 1 : 1 / scaleYTargetMO;
 
@@ -3352,7 +3373,7 @@ body::-webkit-scrollbar {
       }
 
       // 화면 주사율(60Hz, 120Hz ProMotion) 무관 경과시간(dt) 기반 지수 감쇠 보간
-      var lambda = 16;
+      var lambda = 18;
       var factor = 1 - Math.exp(-lambda * dt);
       renderProgress += diff * factor;
 
@@ -3656,6 +3677,10 @@ body::-webkit-scrollbar {
       }, 150);
     });
 
+    window.addEventListener('load', function () {
+      handleCoreResize(true);
+    });
+
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) {
         if (rafId) {
@@ -3815,8 +3840,18 @@ body::-webkit-scrollbar {
         floatContainer.style.transform = '';
       }
     }
-    window.addEventListener('scroll', updateFloatFooterDocking, { passive: true });
-    window.addEventListener('resize', updateFloatFooterDocking);
+    var floatTicking = false;
+    function requestFloatDockingUpdate() {
+      if (!floatTicking) {
+        floatTicking = true;
+        requestAnimationFrame(function () {
+          updateFloatFooterDocking();
+          floatTicking = false;
+        });
+      }
+    }
+    window.addEventListener('scroll', requestFloatDockingUpdate, { passive: true });
+    window.addEventListener('resize', requestFloatDockingUpdate);
     updateFloatFooterDocking();
   }
 
