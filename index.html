@@ -654,6 +654,7 @@ body::-webkit-scrollbar {
   position: relative;
   margin-top: calc(1186 * var(--u));
   width: 100%;
+  z-index: 10;
 }
 #deheir_page .diheir-designer__track {
   position: relative;
@@ -663,7 +664,7 @@ body::-webkit-scrollbar {
   overflow-y: hidden;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  cursor: grab;
+  cursor: default;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   padding: 0 calc(1140 * var(--u));
@@ -672,7 +673,7 @@ body::-webkit-scrollbar {
 }
 #deheir_page .diheir-designer__track::-webkit-scrollbar { display: none; }
 #deheir_page .diheir-designer__track.is-dragging {
-  cursor: grabbing;
+  cursor: default;
   scroll-snap-type: none;
 }
 #deheir_page .diheir-designer__card {
@@ -763,20 +764,24 @@ body::-webkit-scrollbar {
   word-break: keep-all;
 }
 #deheir_page .diheir-designer__card:hover .diheir-designer__card-bg img,
+#deheir_page .diheir-designer__card.is-hovered .diheir-designer__card-bg img,
 #deheir_page .diheir-designer__card:focus-within .diheir-designer__card-bg img,
 #deheir_page .diheir-designer__card.is-active .diheir-designer__card-bg img {
   transform: scale(1.05);
 }
 #deheir_page .diheir-designer__card:hover .diheir-designer__name,
+#deheir_page .diheir-designer__card.is-hovered .diheir-designer__name,
 #deheir_page .diheir-designer__card:focus-within .diheir-designer__name,
 #deheir_page .diheir-designer__card.is-active .diheir-designer__name {
   opacity: 0;
 }
 #deheir_page .diheir-designer__card:hover .diheir-designer__hover,
+#deheir_page .diheir-designer__card.is-hovered .diheir-designer__hover,
 #deheir_page .diheir-designer__card:focus-within .diheir-designer__hover,
 #deheir_page .diheir-designer__card.is-active .diheir-designer__hover {
-  opacity: 1;
-  pointer-events: auto;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
 }
 #deheir_page .diheir-designer__card:focus-visible {
   outline: 2px solid #383629;
@@ -2850,37 +2855,66 @@ body::-webkit-scrollbar {
       dTrack.insertBefore(prefixSet, originalCards[0]);
       dTrack.appendChild(suffixSet);
 
-      // QA 3: 원본 카드 키보드 접근성 지원 (Enter/Space)
-      originalCards.forEach(function (card) {
-        card.addEventListener('keydown', function (e) {
-          if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
-            e.preventDefault();
-            var wasActive = card.classList.contains('is-active');
-            dTrack.querySelectorAll('.diheir-designer__card').forEach(function (c) { c.classList.remove('is-active'); });
-            if (!wasActive) card.classList.add('is-active');
-          }
-        });
-      });
-
-      // 카드 클릭 시 오버레이 토글 (원본 및 복제본 카드 모두 지원, 드래그/스와이프 제외)
-      dTrack.addEventListener('click', function (e) {
-        if (dragDistance > 8 || touchMoved) return;
-        var card = e.target.closest('.diheir-designer__card');
+      // 카드 토글 함수
+      function toggleCard(card) {
         if (!card) return;
         var wasActive = card.classList.contains('is-active');
         dTrack.querySelectorAll('.diheir-designer__card').forEach(function (c) {
           c.classList.remove('is-active');
+          c.classList.remove('is-hovered');
         });
         if (!wasActive) {
           card.classList.add('is-active');
+        }
+      }
+
+      // 원본 및 복제본 전체 카드에 호버 및 키보드 이벤트 바인딩 (어떤 브라우저 환경에서도 100% 오버레이 노출 보장)
+      function bindAllCards() {
+        var allCards = dTrack.querySelectorAll('.diheir-designer__card');
+        allCards.forEach(function (card) {
+          card.addEventListener('mouseenter', function () {
+            card.classList.add('is-hovered');
+          });
+          card.addEventListener('mouseleave', function () {
+            card.classList.remove('is-hovered');
+          });
+          card.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+              e.preventDefault();
+              toggleCard(card);
+            }
+          });
+        });
+      }
+      bindAllCards();
+
+      // 카드 클릭 시 오버레이 토글 (원본 및 복제본 카드 모두 지원, 드래그/스와이프 제외)
+      dTrack.addEventListener('click', function (e) {
+        if (dragDistance > 6 || touchMoved) return;
+        var card = e.target.closest('.diheir-designer__card');
+        if (card) {
+          toggleCard(card);
+        }
+      });
+
+      // 모바일 & 태블릿 탭 (터치 이동 없을 때 오버레이 토글)
+      dTrack.addEventListener('touchend', function (e) {
+        if (!touchMoved && e.changedTouches && e.changedTouches.length > 0) {
+          var touch = e.changedTouches[0];
+          var targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+          var card = targetEl ? targetEl.closest('.diheir-designer__card') : null;
+          if (card) {
+            toggleCard(card);
+          }
         }
       });
 
       // 슬라이더 바깥 영역 클릭 시 활성화된 오버레이 닫기
       document.addEventListener('click', function (e) {
         if (!e.target.closest('.diheir-designer__slider')) {
-          dTrack.querySelectorAll('.diheir-designer__card.is-active').forEach(function (c) {
+          dTrack.querySelectorAll('.diheir-designer__card.is-active, .diheir-designer__card.is-hovered').forEach(function (c) {
             c.classList.remove('is-active');
+            c.classList.remove('is-hovered');
           });
         }
       });
@@ -2899,18 +2933,22 @@ body::-webkit-scrollbar {
       setTimeout(initDesignerScroll, 100);
       setTimeout(initDesignerScroll, 500);
 
-      // 무한 루프 래핑: 스크롤이 양 끝 1세트 경계에 도달하면 가운데 원본 세트 영역으로 순환
+      // 무한 루프 래핑: 1~5번 카드를 모두 온전히 스크롤한 뒤 안전 버퍼 경계에서 순환
       function handleInfiniteScroll() {
         var sLeft = dTrack.scrollLeft;
         var allCards = dTrack.querySelectorAll('.diheir-designer__card');
         if (allCards.length < 15) return;
+        var firstOriginal = allCards[5];
+        var lastOriginal = allCards[9];
+        var baseMin = firstOriginal.offsetLeft - (dTrack.clientWidth - firstOriginal.offsetWidth) / 2;
+        var baseMax = lastOriginal.offsetLeft - (dTrack.clientWidth - lastOriginal.offsetWidth) / 2;
         var setWidth = allCards[5].offsetLeft - allCards[0].offsetLeft;
         if (setWidth <= 0) return;
 
         // prefix 영역 (0~4) 진입 시 가운데 원본(5~9) 위치로 이동
-        if (sLeft < setWidth * 0.5) {
+        if (sLeft < baseMin - setWidth * 0.4) {
           dTrack.scrollLeft = sLeft + setWidth;
-        } else if (sLeft > setWidth * 1.5) {
+        } else if (sLeft > baseMax + setWidth * 0.4) {
           // suffix 영역 (10~14) 진입 시 가운데 원본 위치로 이동
           dTrack.scrollLeft = sLeft - setWidth;
         }
@@ -2950,9 +2988,8 @@ body::-webkit-scrollbar {
         dragDistance = 0;
         startX = e.pageX - dTrack.offsetLeft;
         startScrollLeft = dTrack.scrollLeft;
-        dTrack.classList.add('is-dragging');
         dTrack.style.scrollSnapType = 'none';
-        e.preventDefault();
+        // e.preventDefault() 호출 안 함 -> 브라우저 네이티브 클릭 및 호버 정상 동작 보장
       });
 
       window.addEventListener('mousemove', function (e) {
@@ -2966,7 +3003,6 @@ body::-webkit-scrollbar {
       function stopDrag() {
         if (!isDragging) return;
         isDragging = false;
-        dTrack.classList.remove('is-dragging');
         dTrack.style.scrollSnapType = 'x mandatory';
       }
 
