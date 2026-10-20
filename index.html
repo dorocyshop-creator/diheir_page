@@ -2759,23 +2759,46 @@ body::-webkit-scrollbar {
       });
     });
 
-    var floatStartX = null;
-    var floatMoved = false;
+    var floatStartX = 0;
+    var floatStartY = 0;
+    var floatIsDragging = false;
+    var floatDragDistance = 0;
+
     floatBox.addEventListener('pointerdown', function (e) {
       if (e.button !== 0 || e.target.closest('.diheir-floating__btn')) return;
       floatStartX = e.clientX;
-      floatMoved = false;
-      floatBox.setPointerCapture(e.pointerId);
+      floatStartY = e.clientY;
+      floatDragDistance = 0;
+      floatIsDragging = true;
+      try {
+        floatBox.setPointerCapture(e.pointerId);
+      } catch (err) {}
     });
 
     floatBox.addEventListener('pointermove', function (e) {
-      if (floatStartX === null) return;
+      if (!floatIsDragging) return;
       var dx = e.clientX - floatStartX;
-      if (Math.abs(dx) > 6) floatMoved = true;
-      if (Math.abs(dx) < 40) return;
-      floatStartX = null;
-      showFloat(floatIndex + (dx < 0 ? 1 : -1));
+      var dy = e.clientY - floatStartY;
+      floatDragDistance = Math.hypot(dx, dy);
+      if (Math.abs(dx) >= 40) {
+        floatIsDragging = false;
+        try {
+          floatBox.releasePointerCapture(e.pointerId);
+        } catch (err) {}
+        showFloat(floatIndex + (dx < 0 ? 1 : -1));
+      }
     });
+
+    function releaseFloatPointer(e) {
+      if (!floatIsDragging) return;
+      floatIsDragging = false;
+      try {
+        floatBox.releasePointerCapture(e.pointerId);
+      } catch (err) {}
+    }
+
+    floatBox.addEventListener('pointerup', releaseFloatPointer);
+    floatBox.addEventListener('pointercancel', releaseFloatPointer);
 
     function navigateToCardBenefit() {
       var curSlide = floatSlides[floatIndex];
@@ -2784,20 +2807,16 @@ body::-webkit-scrollbar {
       window.location.href = targetUrl;
     }
 
-    function floatDragEnd(e) {
-      if (floatStartX !== null && !floatMoved) {
-        if (!e.target.closest('.diheir-floating__btn')) {
-          navigateToCardBenefit();
-        }
+    // 표준 click 이벤트: 데스크톱 마우스·트랙패드, 모바일 탭, 접근성 클릭 모두 완벽 지원
+    floatBox.addEventListener('click', function (e) {
+      if (e.target.closest('.diheir-floating__btn')) return;
+      // 15px 이상 명확히 스와이프/드래그한 경우는 슬라이더 전환 의도이므로 이동 차단
+      if (floatDragDistance >= 15) {
+        floatDragDistance = 0;
+        return;
       }
-      floatStartX = null;
-      floatMoved = false;
-    }
-
-    floatBox.addEventListener('pointerup', floatDragEnd);
-    floatBox.addEventListener('pointercancel', function () {
-      floatStartX = null;
-      floatMoved = false;
+      floatDragDistance = 0;
+      navigateToCardBenefit();
     });
 
     floatBox.addEventListener('keydown', function (e) {
