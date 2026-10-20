@@ -410,3 +410,43 @@ Figma MCP(`get_design_context`, 스크린샷)로 실제 프레임·레이어 속
   1. RAF 애니메이션 루프 내에서 호출되던 `updateHudUI()`의 `activeIf.offsetWidth / offsetHeight` 조회를 전면 제거. 매 프레임 발생하던 WebKit 동기 레이아웃 강제 재계산(Forced Synchronous Layout / Reflow)을 차단.
   2. 스크롤 진행 중 매 프레임 `moVideoBox.style.borderRadius`를 계산·변조하여 GPU 클리핑 마스크 재생성을 일으키던 현상을 방지(확대 중 8px 고정 유지, 98% 이상 도달 시에만 0px 전환).
   3. IntersectionObserver 내부의 `getBoundingClientRect` 중복 호출을 제거하고 `handleCoreResize` 시점에만 뷰포트 좌표를 캐싱하여 부드러운 하드웨어 가속 보장.
+
+---
+
+## 20. 추가 수정 및 최적화 내역 (2026-10-20 후속)
+
+### 1) 전체 페이지 12px 미만 텍스트 하한선 적용
+- 반응형 뷰포트 축소 시 텍스트가 12px 미만으로 떨어지는 모든 요소에 `max(12px, calc(...))` 하한선을 전면 적용하여 브라우저 가독성 및 접근성 규격을 충족했습니다.
+  - 적용 대상: `.diheir-home__desc`, `.diheir-home__ctatext`, `.diheir-identity__txt`, `.diheir-identity__boxcap`, `.diheir-heritage__ko`, `.diheir-heritage__en`, `.diheir-heritage__intro`, `.diheir-designer__desc`, `.diheir-designer__hover-desc`, `.diheir-space__tag`, `.diheir-space__dir`, `.diheir-footer__info`
+  - 진단 HUD(`.diheir-diag-hud`): 10px, 10.5px, 11px로 지정되어 있던 5개 항목을 모두 `12px`로 상향 조정.
+
+### 2) 대용량 이미지 교체 및 파일명 표준화
+- **01_home/home_img.jpg**: 사용자 교체본(3223×2148, 2.99MB)에 맞춰 HTML `width="3223" height="2148"` 및 시각 보조 `alt="디에르 브랜드 메인 쇼룸"` 명시.
+- **03_brand_heritage/**: 기존 모호했던 `Frame_10.jpg`, `Frame_11_*.png`, `Frame_12.png` 파일명을 세대별 브랜드 내용에 맞게 복사·표준화하고 HTML 참조를 갱신했습니다.
+  - `heritage_1st_donggwangdang_pc.png` (683×1024, 1대 동광당 PC)
+  - `heritage_1st_donggwangdang_mo.png` (683×1024, 1대 동광당 MO)
+  - `heritage_2nd_samjeongsa.png` (820×1024, 2대 삼정사)
+  - `heritage_3rd_dorocy.jpg` (2867×1912, 3대 도로시 - 실제 규격 반영)
+  - 기존 파일명(`Frame_10.jpg` 등)은 외부 링크 하위 호환성을 위해 유지.
+
+### 3) 디자이너 서비스 카드 4, 5번 호버/클릭 오버레이 정상화
+- **원인 분석**:
+  1. 무한 루프 구현을 위해 생성된 복제 카드에 `inert` 속성이 설정되어 있어, 브라우저가 마우스 포인터 이벤트(호버, 마우스엔터) 및 클릭을 원천 차단했습니다.
+  2. 트랙 초기 위치(`initDesignerScroll`) 및 슬라이드 이동 상태에서 서비스 4, 5번 카드는 복제본(prefix/suffix clone)으로 노출되는 경우가 많아 오버레이가 반응하지 않았습니다.
+  3. 마우스 클릭 시 `.is-active`를 토글하는 전역 클릭 리스너가 누락되어 있었습니다.
+- **조치 사항**:
+  1. 복제본 카드에서 `inert` 속성을 제거하고, `aria-hidden="true"`와 `tabindex="-1"`만을 유지하여 보조기기 접근성은 보호하면서 마우스 포인터 상호작용은 복원했습니다.
+  2. `dTrack`에 통합 클릭 리스너를 추가하여 원본 및 복제본 카드 모두 클릭 시 `.is-active` 오버레이가 정상 토글되도록 처리했습니다 (드래그/스와이프 동작은 8px 감지로 클릭에서 제외).
+  3. 슬라이더 바깥 영역 클릭 시 활성화된 오버레이가 자동으로 닫히도록 바깥 클릭 해제 로직을 추가했습니다.
+
+### 4) 태블릿 가로 모드 코어 섹션 비디오 확대/축소 모션 선형 동기화 (버벅임 해소)
+- **원인 분석**:
+  1. **중첩 3중 스케일링**: `frame30El`이 `(0.7 + 0.3p)`로 확대되는 동시에 자식인 `clipEl`이 `(1 + (scale - 1)p)`로 확대되어, 최종 클리핑 개구부(Aperture) 크기가 $p$의 **2차 함수(quadratic)**로 가속 팽창했습니다.
+  2. **비디오 역스케일과의 진행률 불일치**: 내부 비디오 래퍼(`videoWrapEl`)는 $1 / (1 + (scale - 1)p)$의 **쌍곡선(hyperbolic)** 감속 곡선으로 축소되어, 스크롤 진행에 따라 마스크 경계와 비디오 영상 간의 시각적 장력 및 서브픽셀 떨림이 발생했습니다.
+  3. **WebKit 래스터화 병목**: `overflow: hidden`과 3D matrix 변환이 중첩된 다단계 컨테이너 내부에서 역변환을 수행할 때 Safari GPU 컴포지터가 매 프레임 중간 텍스처를 재할당하며 프레임 드롭을 유발했습니다.
+- **조치 사항**:
+  1. `frame30El`의 중첩 scale 변환을 완전히 제거하고 위치(`translate3d(-50%, 0, 0)`)만 유지하도록 단순화했습니다.
+  2. 클리핑 마스크(`clipEl`)가 시작 크기($0.7$)에서 목표 전면 크기($scaleTargetPC$)까지 **완전한 1차 선형 함수**($0.7 + (scale - 0.7)p$)로 균일하게 확장되도록 일원화했습니다.
+  3. 비디오 래퍼(`videoWrapEl`)의 역스케일 비율을 $videoScale / clipScale$로 정확하게 매핑하여, 스크롤 전체 구간에서 비디오의 절대 크기가 $0.7 + 0.3p$로 완벽하게 선형 확장되도록 동기화했습니다.
+  4. 좌우 사이드 카드 이동, 중앙 마스크 확장, 내부 비디오 줌, 인용구 텍스트 페이드가 모두 동일한 $p$에 맞춰 균일한 속도로 동작하므로 가속이나 뚝뚝 끊김 없이 부드럽게 재생됩니다.
+
