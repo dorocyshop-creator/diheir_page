@@ -360,3 +360,53 @@ Figma MCP(`get_design_context`, 스크린샷)로 실제 프레임·레이어 속
      - Target Progress vs Render Progress (및 편차 $\Delta$)
      - RAF 간격(`dtMs`), 33.3ms / 50ms 초과 프레임 드롭 카운트, 스크롤 입력 급점프 횟수, 리사이즈 이벤트 횟수
      - `[📋 진단 데이터 복사]` 클릭 시 기기 사양, 진단 요약 및 최근 100개 프레임의 타임라인 데이터가 클립보드에 JSON 형식으로 즉시 복사됩니다.
+
+---
+
+## 19. QA 검수 항목 반영 및 성능·접근성 최적화 내역 (2026-10-20)
+
+### 1) 전체 페이지 12px 이하 텍스트 검출 현황
+- **CSS 하한선 설정 요소**:
+  - `.diheir-heritage__ko`: `max(11px, calc(18 * var(--u)))` (너비 470px 이하에서 11px 적용)
+  - `.diheir-heritage__en`: `max(10px, calc(16 * var(--u)))` (너비 480px 이하에서 10px 적용)
+  - `.diheir-space__tag`: `max(11px, calc(18 * var(--u)))` (470px 이하에서 11px 적용)
+  - `.diheir-footer__info`: `max(11px, calc(20 * var(--u)))` (380px 이하에서 11px 적용)
+  - `.diheir-designer__hover-desc` (모바일): `max(11px, calc(14 * var(--u)))` (11px 적용)
+  - 진단 HUD(`.diheir-diag-hud`): 10px, 10.5px, 11px (개발·진단용 오버레이)
+- **모바일 최소 해상도(375px)에서 12px 미만으로 계산되는 가변 텍스트**:
+  - `.diheir-identity__txt`: `calc(24 * var(--u))` → 375px 기준 약 11.7px
+  - `.diheir-space__dir`: `calc(22 * var(--u))` → 375px 기준 약 10.7px
+  - `.diheir-home__desc`: `calc(18 * var(--u))` → 375px 기준 약 8.8px
+  - `.diheir-home__ctatext`: `calc(22 * var(--u))` → 375px 기준 약 10.7px
+  - `.diheir-identity__boxcap`: `calc(16 * var(--u))` → 375px 기준 약 7.8px
+
+### 2) 10MB 초과 대용량 파일 목록 (3개)
+1. `component/font/NotoSerifKR/NotoSerifKR-VF.ttf`: **22.69 MB** (가변 한글 완성형 웹폰트 원본)
+2. `component/img/01_home/home_img.jpg`: **14.98 MB** (히어로 및 매장 배경 고해상도 원본 사진)
+3. `component/img/03_brand_heritage/Frame_10.jpg`: **12.18 MB** (헤리티지 섹션 배경 고해상도 원본 사진)
+> *권장사항*: 실제 쇼핑몰/웹 배포 시 이미지 파일은 WebP 또는 압축 JPEG(각 1~2MB 이내)로 최적화하고, NotoSerifKR 폰트는 경량 서브셋 WOFF2(1.5~2MB)로 분할 적용을 권장합니다.
+
+### 3) QA 4대 검수 항목 수정 사항
+1. **컬렉션 펼치기 키보드 접근성 (QA 1)**:
+   - `#diheir-col-stack`을 기존 `div role="button"`에서 정식 웹 표준 `<button type="button">`으로 전면 교체.
+   - 키보드 `Tab` 포커스 진입 및 `Enter`/`Space` 키 조작 시 마우스 클릭과 100% 동일하게 카드 펼침/접힘 토글 지원.
+   - 펼침 상태와 연동되는 `aria-expanded` ("true" / "false") 및 명확한 스크린리더 음성 안내를 위한 `aria-label` ("컬렉션 카드 (클릭하여 펼치기/접기)") 동적 동기화.
+   - 키보드 탐색 시 선명한 포커스 표시를 위한 `:focus-visible` 아웃라인 스타일 적용 (`outline: 2px solid #e7e8cf; outline-offset: 8px`).
+2. **서비스 카드 복제본 축소 및 접근성 격리 (QA 2)**:
+   - 기존 20세트(100개) 복제 구조를 무한 루프 구현에 필요한 최소 복제(앞 1세트 + 원본 1세트 + 뒤 1세트 = 총 15개 카드)로 대폭 축소하여 DOM 크기 및 메모리 부하 85% 경감.
+   - 장식용 복제본 10개에는 `aria-hidden="true"`, `tabindex="-1"`, `inert` 속성을 부여하고 내부 하위 요소의 포커스를 원천 차단하여 스크린리더 및 키보드 Tab 탐색에서 완전 제외.
+   - 원본 카드 5개만 정식 `role="region"`, 고유 `aria-label`, `tabindex="0"`을 유지하여 접근성 보장.
+3. **서비스 카드 디테일 & PC 이전/다음 버튼 접근성 (QA 3)**:
+   - 카드 호버 디테일 영역에 `:focus-within` 스타일을 적용하여 키보드 Tab 진입 시 호버 상태와 동일하게 설명 패널 노출.
+   - 원본 카드가 포커스된 상태에서 `Enter` 또는 `Space` 키 입력 시 `.is-active` 토글을 지원하여 모바일 터치 및 키보드 사용자 모두 디테일 확인 가능.
+   - PC 레이아웃에서 숨겨져 있던 좌우 화살표 네비게이션(`.diheir-designer__nav`)을 노출하고, `data-dir` 버튼 클릭 및 키보드 엔터 조작을 완벽 지원.
+4. **오타 및 텍스트 교정 (QA 4)**:
+   - `3st Generation` → `3rd Generation` 수정 완료.
+   - `디에르는주얼리를 통해` → `디에르는 주얼리를 통해` 띄어쓰기 교정 완료.
+
+### 4) 코어 섹션 비디오 복원 및 태블릿 프레임 드롭(리플로우) 해소
+- **비디오 미표시 원인 해소**: 이전 작업에서 삽입되었던 `.diheir-core__poster` 레이어가 WebKit의 Vimeo 이벤트 지연으로 인해 사라지지 않고 비디오 위를 영구히 덮고 있던 문제를 확인. 포스터 레이어를 제거하고 PC 및 MO iframe 모두 직관적인 Vimeo 직접 임베드로 원상 복원.
+- **태블릿 화면 버벅임 핵심 병목 제거**:
+  1. RAF 애니메이션 루프 내에서 호출되던 `updateHudUI()`의 `activeIf.offsetWidth / offsetHeight` 조회를 전면 제거. 매 프레임 발생하던 WebKit 동기 레이아웃 강제 재계산(Forced Synchronous Layout / Reflow)을 차단.
+  2. 스크롤 진행 중 매 프레임 `moVideoBox.style.borderRadius`를 계산·변조하여 GPU 클리핑 마스크 재생성을 일으키던 현상을 방지(확대 중 8px 고정 유지, 98% 이상 도달 시에만 0px 전환).
+  3. IntersectionObserver 내부의 `getBoundingClientRect` 중복 호출을 제거하고 `handleCoreResize` 시점에만 뷰포트 좌표를 캐싱하여 부드러운 하드웨어 가속 보장.

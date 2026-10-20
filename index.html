@@ -546,20 +546,6 @@ body::-webkit-scrollbar {
   transform-origin: center center;
   pointer-events: none;
 }
-#deheir_page .diheir-core__poster {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  background: #9f9f8b url("component/img/04_Services_core/Rectangle_12.jpg") center/cover no-repeat;
-  opacity: 1;
-  transition: opacity 0.4s ease;
-  z-index: 1;
-  pointer-events: none;
-}
-#deheir_page .diheir-core__poster.is-hidden {
-  opacity: 0;
-}
 #deheir_page .diheir-core__static-img {
   position: absolute;
   left: 50%;
@@ -575,8 +561,7 @@ body::-webkit-scrollbar {
 #deheir_page.is-mode-image .diheir-core__static-img {
   display: block;
 }
-#deheir_page.is-mode-image .diheir-core__video,
-#deheir_page.is-mode-image .diheir-core__poster {
+#deheir_page.is-mode-image .diheir-core__video {
   display: none !important;
 }
 #deheir_page .diheir-core__video {
@@ -590,6 +575,7 @@ body::-webkit-scrollbar {
   min-height: 100%;
   border: 0;
   pointer-events: none;
+  z-index: 2;
 }
 #deheir_page .diheir-core__overlay {
   position: absolute;
@@ -777,19 +763,75 @@ body::-webkit-scrollbar {
   word-break: keep-all;
 }
 #deheir_page .diheir-designer__card:hover .diheir-designer__card-bg img,
+#deheir_page .diheir-designer__card:focus-within .diheir-designer__card-bg img,
 #deheir_page .diheir-designer__card.is-active .diheir-designer__card-bg img {
   transform: scale(1.05);
 }
 #deheir_page .diheir-designer__card:hover .diheir-designer__name,
+#deheir_page .diheir-designer__card:focus-within .diheir-designer__name,
 #deheir_page .diheir-designer__card.is-active .diheir-designer__name {
   opacity: 0;
 }
 #deheir_page .diheir-designer__card:hover .diheir-designer__hover,
+#deheir_page .diheir-designer__card:focus-within .diheir-designer__hover,
 #deheir_page .diheir-designer__card.is-active .diheir-designer__hover {
   opacity: 1;
   pointer-events: auto;
 }
-#deheir_page .diheir-designer__nav { display: none; }
+#deheir_page .diheir-designer__card:focus-visible {
+  outline: 2px solid #383629;
+  outline-offset: 4px;
+}
+#deheir_page .diheir-designer__nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  left: calc(24 * var(--u));
+  right: calc(24 * var(--u));
+  transform: translateY(-50%);
+  z-index: 20;
+}
+#deheir_page .diheir-designer__nav .diheir-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  cursor: pointer;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  outline: none;
+  transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+#deheir_page .diheir-designer__nav .diheir-arrow:hover {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(255, 255, 255, 0.95);
+  transform: scale(1.05);
+}
+#deheir_page .diheir-designer__nav .diheir-arrow:focus-visible {
+  outline: 2px solid #383629;
+  outline-offset: 3px;
+}
+#deheir_page .diheir-designer__nav .diheir-arrow img {
+  width: 24px;
+  height: 24px;
+  display: block;
+  pointer-events: none;
+}
+#deheir_page .diheir-designer__nav .diheir-arrow--prev img {
+  transform: rotate(-90deg);
+}
+#deheir_page .diheir-designer__nav .diheir-arrow--next img {
+  transform: rotate(90deg);
+}
 
 /* ---------- collection (diheir.com 원본 동일 1920px 반응형 스테이지 & 폰트 14px 이상 절대 보호) ---------- */
 #deheir_page .diheir-collection {
@@ -920,6 +962,18 @@ body::-webkit-scrollbar {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  outline: none;
+}
+#deheir_page .diheir-collection__stack:focus-visible {
+  outline: 2px solid #e7e8cf;
+  outline-offset: 8px;
+  border-radius: 4px;
 }
 #deheir_page .diheir-collection__card {
   position: absolute;
@@ -2250,7 +2304,7 @@ body::-webkit-scrollbar {
           <img src="component/img/03_brand_heritage/Frame_10.jpg" width="4096" height="2731" alt="" loading="lazy">
           <span class="diheir-heritage__shade"></span>
           <div class="diheir-heritage__panel">
-            <h3 class="diheir-heritage__gen diheir-en diheir-cap">3st Generation</h3>
+            <h3 class="diheir-heritage__gen diheir-en diheir-cap">3rd Generation</h3>
             <p class="diheir-heritage__ko">3남매의 도로시(1등 주얼리 쇼핑몰)</p>
             <p class="diheir-heritage__en diheir-en diheir-cap">Korea's Leading Online Jewelry Store</p>
           </div>
@@ -2273,9 +2327,7 @@ body::-webkit-scrollbar {
           <div class="diheir-core__clip">
             <div class="diheir-core__bg"></div>
             <div class="diheir-core__video-wrap">
-              <div class="diheir-core__poster diheir-core__poster--pc" aria-hidden="true"></div>
-              <img class="diheir-core__static-img diheir-core__static-img--pc" src="component/img/04_Services_core/Rectangle_12.jpg" alt="" loading="lazy">
-              <iframe class="diheir-core__video diheir-core__video--pc" data-src="https://player.vimeo.com/video/1211853153?background=1&amp;autoplay=1&amp;loop=1&amp;muted=1&amp;autopause=0&amp;dnt=1&amp;api=1" src="" title="디에르 브랜드 영상" allow="autoplay; fullscreen; picture-in-picture" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+              <iframe class="diheir-core__video diheir-core__video--pc" src="https://player.vimeo.com/video/1211853153?background=1&amp;autoplay=1&amp;loop=1&amp;muted=1&amp;autopause=0&amp;dnt=1" title="디에르 브랜드 영상" allow="autoplay; fullscreen; picture-in-picture" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
             </div>
             <div class="diheir-core__overlay"></div>
           </div>
@@ -2307,9 +2359,7 @@ body::-webkit-scrollbar {
         </div>
         <div class="diheir-core__mo-video-box">
           <div class="diheir-core__mo-video-inner">
-            <div class="diheir-core__poster diheir-core__poster--mo" aria-hidden="true"></div>
-            <img class="diheir-core__static-img diheir-core__static-img--mo" src="component/img/04_Services_core/Rectangle_12.jpg" alt="" loading="lazy">
-            <iframe class="diheir-core__video diheir-core__video--mo" data-src="https://player.vimeo.com/video/1211853153?background=1&amp;autoplay=1&amp;loop=1&amp;muted=1&amp;autopause=0&amp;dnt=1&amp;api=1" src="" title="디에르 브랜드 영상 (모바일)" allow="autoplay; fullscreen; picture-in-picture" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <iframe class="diheir-core__video diheir-core__video--mo" src="https://player.vimeo.com/video/1211853153?background=1&amp;autoplay=1&amp;loop=1&amp;muted=1&amp;autopause=0&amp;dnt=1" title="디에르 브랜드 영상 (모바일)" allow="autoplay; fullscreen; picture-in-picture" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
             <div class="diheir-core__overlay"></div>
           </div>
           <div class="diheir-core__quote diheir-cap">
@@ -2338,7 +2388,7 @@ body::-webkit-scrollbar {
     <div class="diheir-designer__slider diheir-flow" data-diheir-slider>
       <div class="diheir-designer__track" role="region" aria-label="Services 카드 목록 (좌우 스크롤)">
         <!-- 01 The First Principle – Comfort Fit -->
-        <div class="diheir-designer__card">
+        <div class="diheir-designer__card" tabindex="0" role="region" aria-label="서비스 1: The First Principle – Comfort Fit">
           <div class="diheir-designer__card-bg">
             <img src="component/img/05_Services_Designer/Frame_13.png" width="803" height="1211" alt="" loading="lazy" draggable="false">
             <div class="diheir-designer__card-dim"></div>
@@ -2354,7 +2404,7 @@ body::-webkit-scrollbar {
         </div>
 
         <!-- 02 Jewelry Resetting Service -->
-        <div class="diheir-designer__card">
+        <div class="diheir-designer__card" tabindex="0" role="region" aria-label="서비스 2: Jewelry Resetting Service">
           <div class="diheir-designer__card-bg">
             <img src="component/img/05_Services_Designer/Frame_14.png" width="1122" height="1402" alt="" loading="lazy" draggable="false">
             <div class="diheir-designer__card-dim"></div>
@@ -2370,7 +2420,7 @@ body::-webkit-scrollbar {
         </div>
 
         <!-- 03 Craftsmanship -->
-        <div class="diheir-designer__card">
+        <div class="diheir-designer__card" tabindex="0" role="region" aria-label="서비스 3: Craftsmanship">
           <div class="diheir-designer__card-bg">
             <img src="component/img/05_Services_Designer/Frame_15.png" width="1024" height="1536" alt="" loading="lazy" draggable="false">
             <div class="diheir-designer__card-dim"></div>
@@ -2385,7 +2435,7 @@ body::-webkit-scrollbar {
         </div>
 
         <!-- 04 Jewelry as Legacy -->
-        <div class="diheir-designer__card">
+        <div class="diheir-designer__card" tabindex="0" role="region" aria-label="서비스 4: Jewelry as Legacy">
           <div class="diheir-designer__card-bg">
             <img src="component/img/05_Services_Designer/Frame_16.png" width="960" height="1294" alt="" loading="lazy" draggable="false">
             <div class="diheir-designer__card-dim"></div>
@@ -2395,12 +2445,12 @@ body::-webkit-scrollbar {
           </div>
           <div class="diheir-designer__hover">
             <p class="diheir-designer__hover-title diheir-en diheir-cap">Jewelry as Legacy</p>
-            <p class="diheir-designer__hover-desc">디에르는 ‘유산’을 물질이 아닌 감정으로 바라봅니다.<br>부모에서 자녀로,<br>사랑하는 사람에게로 이어지는 이야기,<br>그리고 오래도록 기억으로 남는 순간들.<br>디에르는주얼리를 통해<br>사람과 사람 사이의 시간을 연결하고자 합니다.</p>
+            <p class="diheir-designer__hover-desc">디에르는 ‘유산’을 물질이 아닌 감정으로 바라봅니다.<br>부모에서 자녀로,<br>사랑하는 사람에게로 이어지는 이야기,<br>그리고 오래도록 기억으로 남는 순간들.<br>디에르는 주얼리를 통해<br>사람과 사람 사이의 시간을 연결하고자 합니다.</p>
           </div>
         </div>
 
         <!-- 05 Invisible Precision – Comfort Fit for Size -->
-        <div class="diheir-designer__card">
+        <div class="diheir-designer__card" tabindex="0" role="region" aria-label="서비스 5: Invisible Precision – Comfort Fit for Size">
           <div class="diheir-designer__card-bg">
             <img src="component/img/05_Services_Designer/Frame_17.png" width="1500" height="2500" alt="" loading="lazy" draggable="false">
             <div class="diheir-designer__card-dim"></div>
@@ -2448,7 +2498,7 @@ body::-webkit-scrollbar {
             <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
 
-          <div class="diheir-collection__stack" id="diheir-col-stack" role="button" aria-label="컬렉션 카드 (클릭하여 펼치기)">
+          <button type="button" class="diheir-collection__stack" id="diheir-col-stack" aria-label="컬렉션 카드 (클릭하여 펼치기)" aria-expanded="false" aria-controls="diheir-col-stack">
             <div class="diheir-collection__card diheir-collection__card--1" data-card-idx="1" style="transform: translate3d(-15px, 0, 0) rotate(-3deg) scale(0.98); z-index: 10;">
               <img src="component/img/06_collection/LOV_Collection_02.png" alt="LOV Collection 2" loading="eager" draggable="false">
             </div>
@@ -2458,7 +2508,7 @@ body::-webkit-scrollbar {
             <div class="diheir-collection__card diheir-collection__card--0" data-card-idx="0" style="transform: translate3d(0, 0, 0) rotate(0deg) scale(1); z-index: 20;">
               <img src="component/img/06_collection/LOV_Collection_01.png" alt="LOV Collection 1" loading="eager" draggable="false">
             </div>
-          </div>
+          </button>
 
           <button type="button" class="diheir-collection__btn diheir-collection__btn--next" id="diheir-col-next" aria-label="다음 컬렉션">
             <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
@@ -2774,47 +2824,73 @@ body::-webkit-scrollbar {
     var originalCards = Array.from(dTrack.querySelectorAll('.diheir-designer__card'));
 
     if (originalCards.length > 0) {
-      // 20세트 복제하여 끊김 없는 무한 스크롤 환경 구성 (총 100개 카드)
-      var cloneFragment = document.createDocumentFragment();
-      for (var r = 1; r < 20; r++) {
+      // QA 2: 기존 20세트(100개) 복제 구조를 최소 필요 복제(앞뒤 1세트씩 총 15개 카드)로 개선
+      // 장식용 복제본은 aria-hidden="true", tabindex="-1", inert 로 보조기기 및 Tab 탐색에서 완전 제외
+      function createCloneSet() {
+        var frag = document.createDocumentFragment();
         for (var c = 0; c < originalCards.length; c++) {
           var clone = originalCards[c].cloneNode(true);
-          cloneFragment.appendChild(clone);
+          clone.setAttribute('aria-hidden', 'true');
+          clone.setAttribute('tabindex', '-1');
+          clone.setAttribute('inert', '');
+          clone.removeAttribute('id');
+          clone.classList.add('is-clone');
+          var focusables = clone.querySelectorAll('a, button, input, [tabindex]');
+          for (var f = 0; f < focusables.length; f++) {
+            focusables[f].setAttribute('tabindex', '-1');
+            focusables[f].setAttribute('aria-hidden', 'true');
+          }
+          frag.appendChild(clone);
         }
+        return frag;
       }
-      dTrack.appendChild(cloneFragment);
 
-      // 가운데(10번째 세트) 위치로 초기 스크롤 설정
+      // prefix (앞 1세트: 5개) 및 suffix (뒤 1세트: 5개) 추가 -> 총 15개 카드
+      var prefixSet = createCloneSet();
+      var suffixSet = createCloneSet();
+      dTrack.insertBefore(prefixSet, originalCards[0]);
+      dTrack.appendChild(suffixSet);
+
+      // QA 3: 원본 카드 키보드 및 클릭 접근성 지원
+      originalCards.forEach(function (card) {
+        card.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+            e.preventDefault();
+            var wasActive = card.classList.contains('is-active');
+            originalCards.forEach(function (c) { c.classList.remove('is-active'); });
+            if (!wasActive) card.classList.add('is-active');
+          }
+        });
+      });
+
+      // 가운데(원본 5개 카드 세트) 위치로 초기 스크롤 설정
       function initDesignerScroll() {
         var allCards = dTrack.querySelectorAll('.diheir-designer__card');
         if (allCards.length < 10) return;
-        var targetCard = allCards[Math.floor(allCards.length / 2)];
-        dTrack.scrollLeft = targetCard.offsetLeft - (dTrack.clientWidth - targetCard.offsetWidth) / 2;
+        var firstOriginal = originalCards[0];
+        if (firstOriginal) {
+          dTrack.scrollLeft = firstOriginal.offsetLeft - (dTrack.clientWidth - firstOriginal.offsetWidth) / 2;
+        }
       }
 
       requestAnimationFrame(initDesignerScroll);
       setTimeout(initDesignerScroll, 100);
       setTimeout(initDesignerScroll, 500);
 
-      // 무한 루프 래핑: 스크롤이 양 끝 20% 구간에 도달하면 가운데 영역으로 감쪽같이 순환
+      // 무한 루프 래핑: 스크롤이 양 끝 1세트 경계에 도달하면 가운데 원본 세트 영역으로 순환
       function handleInfiniteScroll() {
         var sLeft = dTrack.scrollLeft;
-        var sWidth = dTrack.scrollWidth;
-        var cWidth = dTrack.clientWidth;
-        if (sWidth <= cWidth) return;
-
         var allCards = dTrack.querySelectorAll('.diheir-designer__card');
-        var setWidth = 0;
-        if (allCards.length >= 5) {
-          setWidth = allCards[5].offsetLeft - allCards[0].offsetLeft;
-        }
+        if (allCards.length < 15) return;
+        var setWidth = allCards[5].offsetLeft - allCards[0].offsetLeft;
         if (setWidth <= 0) return;
 
-        var shiftDistance = Math.round((sWidth * 0.4) / setWidth) * setWidth;
-        if (sLeft < sWidth * 0.2) {
-          dTrack.scrollLeft = sLeft + shiftDistance;
-        } else if (sLeft > sWidth * 0.8) {
-          dTrack.scrollLeft = sLeft - shiftDistance;
+        // prefix 영역 (0~4) 진입 시 가운데 원본(5~9) 위치로 이동
+        if (sLeft < setWidth * 0.5) {
+          dTrack.scrollLeft = sLeft + setWidth;
+        } else if (sLeft > setWidth * 1.5) {
+          // suffix 영역 (10~14) 진입 시 가운데 원본 위치로 이동
+          dTrack.scrollLeft = sLeft - setWidth;
         }
       }
 
@@ -2875,7 +2951,7 @@ body::-webkit-scrollbar {
       window.addEventListener('mouseup', stopDrag);
       dTrack.addEventListener('mouseleave', stopDrag);
 
-      // 이전/다음 버튼 클릭 시에만 슬라이드 이동
+      // QA 3: 이전/다음 버튼 클릭 시 슬라이드 이동 (PC 및 모바일 모두 작동)
       designerSlider.querySelectorAll('[data-dir]').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
           e.preventDefault();
@@ -2899,7 +2975,6 @@ body::-webkit-scrollbar {
     var pcSideL = coreSec.querySelectorAll('.diheir-core__side--15, .diheir-core__side--14');
     var pcSideR = coreSec.querySelectorAll('.diheir-core__side--12, .diheir-core__side--13');
     var pcIframe = coreSec.querySelector('.diheir-core__video--pc');
-    var pcPoster = coreSec.querySelector('.diheir-core__poster--pc');
     var pcStaticImg = coreSec.querySelector('.diheir-core__static-img--pc');
 
     var moCards = coreSec.querySelectorAll('.diheir-core__mo-card');
@@ -2908,7 +2983,6 @@ body::-webkit-scrollbar {
     var moVideoInner = moVideoBox ? moVideoBox.querySelector('.diheir-core__mo-video-inner') : null;
     var moQuote = moVideoBox ? moVideoBox.querySelector('.diheir-core__quote') : null;
     var moIframe = coreSec.querySelector('.diheir-core__video--mo');
-    var moPoster = coreSec.querySelector('.diheir-core__poster--mo');
     var moStaticImg = coreSec.querySelector('.diheir-core__static-img--mo');
 
     // 진단 모드 상태 (?diag=1 또는 ?mode=video|paused|image|nocounter)
@@ -2960,6 +3034,9 @@ body::-webkit-scrollbar {
     var isAnimating = false;
     var lastTime = 0;
     var rafId = null;
+    var lastHudUpdate = 0;
+    var isUserScrolling = false;
+    var scrollEndTimer = null;
 
     // 모드 적용 헬퍼
     function applyDiagnosticMode(mode) {
@@ -2970,14 +3047,12 @@ body::-webkit-scrollbar {
         root.classList.add('is-mode-image');
         setVimeoPlayback(false);
       } else if (currentMode === 'paused') {
-        loadActiveIframe();
         setVimeoPlayback(false);
       } else {
         // video or nocounter
-        loadActiveIframe();
         setVimeoPlayback(true);
       }
-      updateHudUI();
+      maybeUpdateHudUI(performance.now(), true);
     }
 
     function setVimeoPlayback(play) {
@@ -2990,25 +3065,6 @@ body::-webkit-scrollbar {
       } catch (e) {}
     }
 
-    function loadActiveIframe() {
-      if (currentMode === 'image') return;
-      var active = isMobile ? moIframe : pcIframe;
-      var inactive = isMobile ? pcIframe : moIframe;
-
-      // Inactive iframe has its source cleared to release GPU texture memory
-      if (inactive && inactive.getAttribute('src')) {
-        inactive.setAttribute('src', '');
-      }
-
-      if (active) {
-        var dSrc = active.getAttribute('data-src');
-        if (dSrc && active.getAttribute('src') !== dSrc) {
-          vimeoStatus = 'loading';
-          active.setAttribute('src', dSrc);
-        }
-      }
-    }
-
     // Vimeo postMessage 리스너
     window.addEventListener('message', function (e) {
       var data = e.data;
@@ -3018,15 +3074,13 @@ body::-webkit-scrollbar {
       if (!data) return;
       if (data.event === 'ready') {
         vimeoStatus = 'ready';
-        updateHudUI();
+        maybeUpdateHudUI(performance.now(), true);
       } else if (data.event === 'play' || data.event === 'playing') {
         vimeoStatus = 'playing';
-        if (pcPoster) pcPoster.classList.add('is-hidden');
-        if (moPoster) moPoster.classList.add('is-hidden');
-        updateHudUI();
+        maybeUpdateHudUI(performance.now(), true);
       } else if (data.event === 'pause') {
         vimeoStatus = 'paused';
-        updateHudUI();
+        maybeUpdateHudUI(performance.now(), true);
       }
     });
 
@@ -3156,8 +3210,8 @@ body::-webkit-scrollbar {
             var invScaleY = isNoCounter ? 1 : 1 / curScaleY;
 
             moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(' + curScaleX.toFixed(5) + ', ' + curScaleY.toFixed(5) + ')';
-            var br = Math.max(0, 8 * (1 - ease));
-            moVideoBox.style.borderRadius = br.toFixed(2) + 'px';
+            // 리플로우 및 GPU 마스크 재생성 방지: 확대 중에는 고정 8px 유지, 98% 이상에서만 0px로 전환
+            moVideoBox.style.borderRadius = (progress >= 0.98) ? '0px' : '8px';
 
             if (moVideoInner) {
               moVideoInner.style.transform = 'translate3d(-50%, -50%, 0) scale(' + invScaleX.toFixed(5) + ', ' + invScaleY.toFixed(5) + ')';
@@ -3200,7 +3254,7 @@ body::-webkit-scrollbar {
       if (dtMs > 50) frameDrops50++;
       else if (dtMs > 33.3) frameDrops33++;
 
-      // FPS 계산 (250ms 주기 평활화)
+      // FPS 계산 (250ms 주기)
       frameCount++;
       if (now - lastFpsCalc >= 250) {
         currentFps = Math.round((frameCount * 1000) / (now - lastFpsCalc));
@@ -3210,24 +3264,26 @@ body::-webkit-scrollbar {
 
       var diff = targetProgress - renderProgress;
 
-      // 텔레메트리 링 버퍼 기록 (최근 250개 샘플)
-      diagTimeline.push({
-        t: Math.round(now),
-        scrollY: Math.round(window.pageYOffset || window.scrollY || 0),
-        targetP: Number(targetProgress.toFixed(4)),
-        renderP: Number(renderProgress.toFixed(4)),
-        dtMs: Number(dtMs.toFixed(1)),
-        fps: currentFps
-      });
-      if (diagTimeline.length > 250) diagTimeline.shift();
+      // 텔레메트리 링 버퍼 기록
+      if (isDiagMode) {
+        diagTimeline.push({
+          t: Math.round(now),
+          scrollY: Math.round(window.pageYOffset || window.scrollY || 0),
+          targetP: Number(targetProgress.toFixed(4)),
+          renderP: Number(renderProgress.toFixed(4)),
+          dtMs: Number(dtMs.toFixed(1)),
+          fps: currentFps
+        });
+        if (diagTimeline.length > 250) diagTimeline.shift();
+      }
 
-      // 수렴 임계값 도달 시 즉시 목표값 고정 및 루프 정지 (불필요한 지속 실행 차단)
-      if (Math.abs(diff) < 0.0002) {
+      // 수렴 임계값 도달 시: 사용자가 스크롤 중이 아닐 때만 정지
+      if (Math.abs(diff) < 0.0002 && !isUserScrolling) {
         renderProgress = targetProgress;
         applyCoreRender(renderProgress);
         isAnimating = false;
         rafId = null;
-        updateHudUI();
+        maybeUpdateHudUI(now, true);
         return;
       }
 
@@ -3237,7 +3293,7 @@ body::-webkit-scrollbar {
       renderProgress += diff * factor;
 
       applyCoreRender(renderProgress);
-      updateHudUI();
+      maybeUpdateHudUI(now, false);
 
       rafId = requestAnimationFrame(tick);
     }
@@ -3259,7 +3315,7 @@ body::-webkit-scrollbar {
         renderProgress = targetProgress;
         applyCoreRender(renderProgress);
         isAnimating = false;
-        updateHudUI();
+        maybeUpdateHudUI(performance.now(), true);
         return;
       }
 
@@ -3299,7 +3355,7 @@ body::-webkit-scrollbar {
 
       if (modeSwitched) {
         resetStaleStyles();
-        loadActiveIframe();
+        setVimeoPlayback(true);
       }
 
       coreHeight = coreSec.offsetHeight;
@@ -3326,7 +3382,7 @@ body::-webkit-scrollbar {
         scaleXTargetPC = actualWidth / 1404;
         scaleYTargetPC = internalVh / 637;
 
-        // PC 비디오 iframe 최적 종횡비 정밀 산정 (과도한 텍스처 팽창 방지)
+        // PC 비디오 iframe 최적 종횡비 정밀 산정
         if (pcIframe) {
           var targetW = actualWidth;
           var targetH = internalVh;
@@ -3464,6 +3520,13 @@ body::-webkit-scrollbar {
       applyDiagnosticMode(currentMode);
     }
 
+    function maybeUpdateHudUI(now, force) {
+      if (!isDiagMode || !hudEl) return;
+      if (!force && now - lastHudUpdate < 250) return;
+      lastHudUpdate = now;
+      updateHudUI();
+    }
+
     function updateHudUI() {
       if (!isDiagMode || !hudEl) return;
       var fpsEl = hudEl.querySelector('#hudFps');
@@ -3488,7 +3551,8 @@ body::-webkit-scrollbar {
         if (currentMode === 'image') {
           iframeEl.textContent = 'None (정지이미지)';
         } else if (activeIf) {
-          iframeEl.textContent = (activeIf.offsetWidth || 0) + 'x' + (activeIf.offsetHeight || 0) + 'px';
+          // offsetWidth 대신 style 너비/높이 사용하여 강제 동기 레이아웃(reflow) 방지
+          iframeEl.textContent = (activeIf.style.width || 'auto') + ' x ' + (activeIf.style.height || 'auto');
         }
       }
 
@@ -3509,6 +3573,11 @@ body::-webkit-scrollbar {
     }
 
     window.addEventListener('scroll', function () {
+      isUserScrolling = true;
+      if (scrollEndTimer) clearTimeout(scrollEndTimer);
+      scrollEndTimer = setTimeout(function () {
+        isUserScrolling = false;
+      }, 150);
       requestTick(false);
     }, { passive: true });
 
@@ -3535,24 +3604,11 @@ body::-webkit-scrollbar {
       }
     });
 
-    // 1 뷰포트 전 사전 준비(Preload) Observer & 뷰포트 진입 재생 Observer 분리
+    // 뷰포트 진입 감지: 진입 시 음소거 재생, 이탈 시 일시정지 (뷰포트 밖 불필요한 GPU 낭비 방지)
     if ('IntersectionObserver' in window) {
-      // 100% 뷰포트 사전 로드: 사용자가 상단 헤리티지 섹션 통과 시점에 Vimeo 아이프레임 로드 시작
-      var preloadObserver = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            coreOffsetTop = coreSec.getBoundingClientRect().top + (window.pageYOffset || window.scrollY || 0);
-            loadActiveIframe();
-          }
-        });
-      }, { rootMargin: '100% 0px' });
-      preloadObserver.observe(coreSec);
-
-      // 정확한 뷰포트 진입/이탈 감지: 진입 시 음소거 재생, 이탈 시 일시정지
       var viewObserver = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
           if (entry.isIntersecting) {
-            coreOffsetTop = coreSec.getBoundingClientRect().top + (window.pageYOffset || window.scrollY || 0);
             setVimeoPlayback(true);
             requestTick(false);
           } else {
@@ -3562,7 +3618,6 @@ body::-webkit-scrollbar {
       }, { rootMargin: '0px' });
       viewObserver.observe(coreSec);
     } else {
-      loadActiveIframe();
       setVimeoPlayback(true);
     }
 
@@ -3826,6 +3881,12 @@ body::-webkit-scrollbar {
         } else {
           colGalleryWrap.classList.remove('is-spread');
         }
+      }
+
+      if (colStack) {
+        var isCurrentSpread = !isMobile && isSpread;
+        colStack.setAttribute('aria-expanded', isCurrentSpread ? 'true' : 'false');
+        colStack.setAttribute('aria-label', isCurrentSpread ? '컬렉션 카드 (클릭하여 접기)' : '컬렉션 카드 (클릭하여 펼치기)');
       }
 
       if (!isMobile) {
