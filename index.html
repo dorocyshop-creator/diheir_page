@@ -449,7 +449,8 @@ body::-webkit-scrollbar {
 #deheir_page .diheir-core {
   position: relative;
   width: 100%;
-  height: 3500px;
+  height: 300vh;
+  min-height: 2200px;
   background: #9f9f8b;
   padding: 0;
   overflow: visible !important;
@@ -1464,7 +1465,7 @@ body::-webkit-scrollbar {
   #deheir_page .diheir-heritage__intro--2 { margin-top: calc(127 * var(--u)); }
 
   /* Services_core */
-  #deheir_page .diheir-core { height: 500vh; padding: 0; overflow: visible !important; }
+  #deheir_page .diheir-core { height: 450vh; padding: 0; overflow: visible !important; }
   #deheir_page .diheir-core__sticky {
     position: -webkit-sticky;
     position: sticky;
@@ -2046,7 +2047,7 @@ body::-webkit-scrollbar {
 </div><!-- /.diheir-main (01~03) -->
 
   <!-- 04 Services_core (3:273 / 3:626) -->
-  <section id="service" class="diheir-core diheir-sec" data-name="Services_core" aria-label="Jewelry becomes meaningful">
+  <section id="core" class="diheir-core diheir-sec" data-name="Services_core" aria-label="Jewelry becomes meaningful">
     <div class="diheir-core__sticky">
       <!-- PC layout (1024px 이상) -->
       <div class="diheir-core__stage">
@@ -2102,7 +2103,7 @@ body::-webkit-scrollbar {
 <div class="diheir-main"><!-- /.diheir-main (05~08) -->
 
   <!-- 05 Services_Designer (3:283 / 3:631) -->
-  <section class="diheir-designer diheir-sec" aria-labelledby="diheir-designer-title">
+  <section id="service" class="diheir-designer diheir-sec" aria-labelledby="diheir-designer-title">
     <div class="diheir-designer__bg diheir-deco"><img class="diheir-cover" src="component/img/05_Services_Designer/Services_Designer.jpg" width="1920" height="2816" alt="" loading="lazy"></div>
     <div class="diheir-designer__grad diheir-deco"></div>
     <div class="diheir-designer__sketch1 diheir-deco"><img src="component/img/05_Services_Designer/개체.png" width="592" height="705" alt="" loading="lazy"></div>
@@ -2663,118 +2664,147 @@ body::-webkit-scrollbar {
     var pcSideR = coreSec.querySelectorAll('.diheir-core__side--12, .diheir-core__side--13');
 
     var moCards = coreSec.querySelectorAll('.diheir-core__mo-card');
+    var moCardsWrap = coreSec.querySelector('.diheir-core__mo-cards');
     var moVideoBox = coreSec.querySelector('.diheir-core__mo-video-box');
+    var moQuote = moVideoBox ? moVideoBox.querySelector('.diheir-core__quote') : null;
 
-    function updateCoreScroll() {
-      var rect = coreSec.getBoundingClientRect();
-      var scrollDist = coreSec.offsetHeight - window.innerHeight;
-      if (scrollDist <= 0) return;
-      var progress = Math.max(0, Math.min(1, -rect.top / scrollDist));
+    var isMobile = false;
+    var scrollDist = 1;
+    var winW = 0;
+    var winH = 0;
+    var currentScale = 1;
+    var internalVh = 1080;
+    var actualWidth = 1920;
+    var startTop = 221.5;
+    var horizontalInset = 258;
+    var moBaseW = 0;
+    var moBaseH = 0;
 
-      var isMobile = window.innerWidth < 1024;
+    function handleCoreResize() {
+      winW = window.innerWidth;
+      winH = window.innerHeight;
+      isMobile = winW < 1024;
+      scrollDist = Math.max(1, coreSec.offsetHeight - winH);
+
       if (!isMobile) {
-        // diheir.com 원본 공식 기준:
-        // currentScale = Math.min(1, window.innerWidth / 1920)
-        // internalVh = window.innerHeight / currentScale
-        // actualWidth = Math.max(1920, window.innerWidth / currentScale)
-        var currentScale = Math.min(1, window.innerWidth / 1920);
-        var vh = window.innerHeight;
-        var internalVh = vh / currentScale;
-        var actualWidth = Math.max(1920, window.innerWidth / currentScale);
+        currentScale = Math.min(1, winW / 1920);
+        internalVh = winH / currentScale;
+        actualWidth = Math.max(1920, winW / currentScale);
 
         if (stageEl) {
           stageEl.style.setProperty('--core-stage-scale', currentScale);
           stageEl.style.setProperty('--core-internal-vh', internalVh + 'px');
           stageEl.style.setProperty('--core-actual-w', actualWidth + 'px');
+
+          var centerY = internalVh / 2;
+          stageEl.style.setProperty('--core-lt-y', (centerY - 389) + 'px');
+          stageEl.style.setProperty('--core-lb-y', (centerY + 29) + 'px');
+          stageEl.style.setProperty('--core-rt-y', (centerY - 408) + 'px');
+          stageEl.style.setProperty('--core-rb-y', (centerY + 47) + 'px');
         }
 
-        // Side images Y positions centered around internalVh / 2
-        var centerY = internalVh / 2;
-        var leftTopY = centerY - 389;
-        var leftBottomY = centerY + 29;
-        var rightTopY = centerY - 408;
-        var rightBottomY = centerY + 47;
-
-        if (stageEl) {
-          stageEl.style.setProperty('--core-lt-y', leftTopY + 'px');
-          stageEl.style.setProperty('--core-lb-y', leftBottomY + 'px');
-          stageEl.style.setProperty('--core-rt-y', rightTopY + 'px');
-          stageEl.style.setProperty('--core-rb-y', rightBottomY + 'px');
+        startTop = (internalVh - 637) / 2;
+        horizontalInset = (actualWidth - 1404) / 2;
+      } else {
+        if (moCardsWrap) {
+          moBaseW = moCardsWrap.offsetWidth;
+          moBaseH = moCardsWrap.offsetHeight;
         }
+      }
+      updateCoreScroll();
+    }
 
-        // Side images X translations:
-        // leftX = (-473 - (actualWidth - 1920) / 2) * progress
-        // rightX = (465 + (actualWidth - 1920) / 2) * progress
+    function updateCoreScroll() {
+      var rect = coreSec.getBoundingClientRect();
+      if (rect.bottom <= 0 || rect.top >= winH) return;
+
+      var progress = Math.max(0, Math.min(1, -rect.top / scrollDist));
+
+      if (!isMobile) {
+        // PC 및 태블릿 가로 (부드러운 하드웨어 가속)
         var leftX = (-473 - (actualWidth - 1920) / 2) * progress;
         var rightX = (465 + (actualWidth - 1920) / 2) * progress;
 
-        pcSideL.forEach(function (el) { el.style.transform = 'translateX(' + leftX + 'px)'; });
-        pcSideR.forEach(function (el) { el.style.transform = 'translateX(' + rightX + 'px)'; });
-
-        // Center Frame30 scale: 0.7 -> 1.0 (시작 시 0.7 배율로 양옆 사진과 겹치지 않고 적정 여백 유지)
-        var frameScale = 0.7 + 0.3 * progress;
-        if (frame30El) {
-          frame30El.style.setProperty('--core-frame-scale', frameScale);
+        for (var i = 0; i < pcSideL.length; i++) {
+          pcSideL[i].style.transform = 'translate3d(' + leftX.toFixed(1) + 'px, 0, 0)';
+        }
+        for (var j = 0; j < pcSideR.length; j++) {
+          pcSideR[j].style.transform = 'translate3d(' + rightX.toFixed(1) + 'px, 0, 0)';
         }
 
-        // Clip-path inset:
-        // at progress = 0: inset(startTop, horizontalInset, startTop, horizontalInset)
-        // at progress = 1: inset(0, 0, 0, 0)
-        var startTop = (internalVh - 637) / 2;
-        var horizontalInset = (actualWidth - 1404) / 2;
-        var clipTop = startTop * (1 - progress);
-        var clipX = horizontalInset * (1 - progress);
+        // 중앙 Frame30 scale: 0.7 -> 1.0 (부드러운 GPU 스케일)
+        var frameScale = 0.7 + 0.3 * progress;
+        if (frame30El) {
+          frame30El.style.transform = 'translate3d(-50%, 0, 0) scale(' + frameScale.toFixed(3) + ')';
+        }
+
+        // Clip-path inset
+        var clipTop = Math.max(0, startTop * (1 - progress));
+        var clipX = Math.max(0, horizontalInset * (1 - progress));
 
         if (clipEl) {
-          var clipVal = 'inset(' + clipTop + 'px ' + clipX + 'px ' + clipTop + 'px ' + clipX + 'px)';
+          var clipVal = 'inset(' + clipTop.toFixed(1) + 'px ' + clipX.toFixed(1) + 'px ' + clipTop.toFixed(1) + 'px ' + clipX.toFixed(1) + 'px)';
           clipEl.style.clipPath = clipVal;
           clipEl.style.webkitClipPath = clipVal;
         }
 
-        // Text opacity: progress 0.57~1.0 -> 1 to 0
-        var textOp = progress < 0.57 ? 1 : Math.max(0, 1 - (progress - 0.57) / 0.43);
+        // Text opacity: progress 0.52~0.92 구간에서 부드럽게 페이드아웃
+        var textOp = progress < 0.52 ? 1 : Math.max(0, 1 - (progress - 0.52) / 0.40);
         if (quoteWrapEl) {
-          quoteWrapEl.style.opacity = textOp;
+          quoteWrapEl.style.opacity = textOp.toFixed(3);
         }
       } else {
-        // 모바일 및 태블릿
+        // 모바일 및 태블릿 세로
         function cardOpacity(p, start, peak1, peak2, end) {
           if (p < start || p > end) return 0;
           if (p < peak1) return (p - start) / (peak1 - start);
           if (p <= peak2) return 1;
           return 1 - (p - peak2) / (end - peak2);
         }
+
         if (moCards.length >= 4) {
-          // 첫 번째 카드는 진입 시점(progress 0)부터 즉시 100% 보이도록 시작
-          moCards[0].style.opacity = cardOpacity(progress, 0, 0, 0.18, 0.2);
-          moCards[1].style.opacity = cardOpacity(progress, 0.2, 0.25, 0.38, 0.4);
-          moCards[2].style.opacity = cardOpacity(progress, 0.4, 0.45, 0.58, 0.6);
-          moCards[3].style.opacity = cardOpacity(progress, 0.6, 0.65, 0.78, 0.8);
+          moCards[0].style.opacity = cardOpacity(progress, 0, 0, 0.16, 0.19);
+          moCards[1].style.opacity = cardOpacity(progress, 0.17, 0.20, 0.34, 0.37);
+          moCards[2].style.opacity = cardOpacity(progress, 0.35, 0.38, 0.52, 0.55);
+          moCards[3].style.opacity = cardOpacity(progress, 0.53, 0.56, 0.70, 0.73);
         }
 
-        // 0.8 이상에서 비디오 표시 및 0.9~1.0에서 모바일/태블릿 화면 크기에 맞춰 전체로 부드럽게 확대
-        var vOp = progress >= 0.8 ? 1 : 0;
+        // 마지막 div (moVideoBox):
+        // 0.70부터 부드럽게 페이드인 -> 0.73부터 0.92까지 자연스러운 ease-in-out으로 화면 전체로 확대
+        // 0.92 ~ 1.00에서는 전체화면 상태 유지
         if (moVideoBox) {
-          moVideoBox.style.opacity = vOp;
-          var moCardsWrap = coreSec.querySelector('.diheir-core__mo-cards');
-          if (progress >= 0.9 && moCardsWrap) {
-            var exp = (progress - 0.9) / 0.1;
-            var baseW = moCardsWrap.offsetWidth;
-            var baseH = moCardsWrap.offsetHeight;
-            var targetW = window.innerWidth;
-            var targetH = window.innerHeight;
-            moVideoBox.style.width = (baseW + (targetW - baseW) * exp) + 'px';
-            moVideoBox.style.height = (baseH + (targetH - baseH) * exp) + 'px';
-            moVideoBox.style.borderRadius = (8 * (1 - exp)) + 'px';
-          } else {
+          if (progress < 0.70) {
+            moVideoBox.style.opacity = '0';
             moVideoBox.style.width = '';
             moVideoBox.style.height = '';
             moVideoBox.style.borderRadius = '';
-          }
-          var moQuote = moVideoBox.querySelector('.diheir-core__quote');
-          if (moQuote) {
-            var moTextOp = progress >= 0.9 ? Math.max(0, 1 - (progress - 0.9) / 0.08) : 1;
-            moQuote.style.opacity = moTextOp;
+          } else {
+            var vOp = progress < 0.74 ? (progress - 0.70) / 0.04 : 1;
+            moVideoBox.style.opacity = vOp.toFixed(3);
+
+            if (progress >= 0.73 && progress < 0.92) {
+              var t = (progress - 0.73) / 0.19;
+              var ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
+              var w = moBaseW + (winW - moBaseW) * ease;
+              var h = moBaseH + (winH - moBaseH) * ease;
+              var br = 8 * (1 - ease);
+              moVideoBox.style.width = w.toFixed(1) + 'px';
+              moVideoBox.style.height = h.toFixed(1) + 'px';
+              moVideoBox.style.borderRadius = br.toFixed(1) + 'px';
+            } else if (progress >= 0.92) {
+              moVideoBox.style.width = '100vw';
+              moVideoBox.style.height = '100%';
+              moVideoBox.style.borderRadius = '0px';
+            } else {
+              moVideoBox.style.width = '';
+              moVideoBox.style.height = '';
+              moVideoBox.style.borderRadius = '';
+            }
+
+            if (moQuote) {
+              var qOp = progress < 0.75 ? 1 : Math.max(0, 1 - (progress - 0.75) / 0.10);
+              moQuote.style.opacity = qOp.toFixed(3);
+            }
           }
         }
       }
@@ -2790,8 +2820,12 @@ body::-webkit-scrollbar {
         ticking = true;
       }
     }, { passive: true });
-    window.addEventListener('resize', updateCoreScroll);
-    updateCoreScroll();
+
+    window.addEventListener('resize', handleCoreResize);
+    window.addEventListener('orientationchange', function () {
+      setTimeout(handleCoreResize, 150);
+    });
+    handleCoreResize();
   }
 
   /* ---------- PC 플로팅 혜택 카드: 좌우 버튼 · 드래그/스와이프 · 30초마다 다음 및 클릭 시 이동 ---------- */
@@ -2901,6 +2935,27 @@ body::-webkit-scrollbar {
     });
 
     showFloat(0);
+  }
+
+  /* ---------- 플로팅 배너 풋터 겹침 방지 (도킹 처리) ---------- */
+  var floatContainer = root.querySelector('.diheir-floating');
+  var footerSection = root.querySelector('.diheir-footer');
+  if (floatContainer && footerSection) {
+    function updateFloatFooterDocking() {
+      var fRect = footerSection.getBoundingClientRect();
+      var wH = window.innerHeight;
+      var isMo = window.innerWidth < 1024;
+      var baseGap = isMo ? 16 : 24;
+      if (fRect.top < wH) {
+        var pushUp = wH - fRect.top + baseGap;
+        floatContainer.style.transform = 'translate3d(0, -' + pushUp.toFixed(1) + 'px, 0)';
+      } else {
+        floatContainer.style.transform = '';
+      }
+    }
+    window.addEventListener('scroll', updateFloatFooterDocking, { passive: true });
+    window.addEventListener('resize', updateFloatFooterDocking);
+    updateFloatFooterDocking();
   }
 
   /* ---------- collection 인터랙션 (4대 컬렉션 전환, 스택 펼침/스윕) ---------- */
