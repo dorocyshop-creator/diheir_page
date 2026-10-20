@@ -16,12 +16,21 @@
 =================================================================== -->
 <style>
 /* ---------- Fonts ---------- */
-/* DreamAvenue / Regular: not_found (폰트 파일 미제공).
-   존재하지 않는 파일을 요청하지 않도록 local() 만 선언합니다. 설치되어 있지 않으면 serif 로 대체됩니다.
-   라이선스 파일 확보 시 component/font/DreamAvenue/ 에 넣고 local() 뒤에 url(...) 을 추가하세요. (README.md 참고) */
+/* Dream Avenue: 영문 웹폰트 (woff2 / woff) */
 @font-face {
   font-family: "DreamAvenue";
-  src: local("Dream Avenue"), local("DreamAvenue"), local("DreamAvenue-Regular");
+  src: url("component/font/DreamAvenue/font.woff2") format("woff2"),
+       url("component/font/DreamAvenue/font.woff") format("woff"),
+       local("Dream Avenue"), local("DreamAvenue"), local("DreamAvenue-Regular");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dream Avenue";
+  src: url("component/font/DreamAvenue/font.woff2") format("woff2"),
+       url("component/font/DreamAvenue/font.woff") format("woff"),
+       local("Dream Avenue"), local("DreamAvenue"), local("DreamAvenue-Regular");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -156,7 +165,6 @@ body::-webkit-scrollbar {
               visibility 0.3s;
   pointer-events: none;
 }
-#deheir_page .diheir-nav__logo-wrap:hover .diheir-nav__dropdown-wrap,
 #deheir_page .diheir-nav__logo-wrap.is-open .diheir-nav__dropdown-wrap {
   opacity: 1;
   visibility: visible;
@@ -2801,9 +2809,7 @@ body::-webkit-scrollbar {
     floatBox.addEventListener('pointercancel', releaseFloatPointer);
 
     function navigateToCardBenefit() {
-      var curSlide = floatSlides[floatIndex];
-      var benefitId = (curSlide && curSlide.getAttribute('data-benefit')) || 'consultation';
-      var targetUrl = 'https://www.diheir.com/board/board.html?code=diheir_board3&page=1&board_cate=&type=i&utm_source=diheir_web&utm_medium=referral&utm_campaign=reservation&utm_content=floating_banner&benefit=' + encodeURIComponent(benefitId) + '#benefits';
+      var targetUrl = 'https://www.diheir.com/board/board.html?code=diheir_board3&page=1&board_cate=&type=i&utm_source=diheir_web&utm_medium=referral&utm_campaign=reservation&utm_content=floating_banner';
       window.location.href = targetUrl;
     }
 
