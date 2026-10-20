@@ -544,8 +544,40 @@ body::-webkit-scrollbar {
   height: var(--core-internal-vh, 1080px);
   transform: translate3d(-50%, -50%, 0);
   transform-origin: center center;
-  overflow: hidden;
   pointer-events: none;
+}
+#deheir_page .diheir-core__poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #9f9f8b url("component/img/04_Services_core/Rectangle_12.jpg") center/cover no-repeat;
+  opacity: 1;
+  transition: opacity 0.4s ease;
+  z-index: 1;
+  pointer-events: none;
+}
+#deheir_page .diheir-core__poster.is-hidden {
+  opacity: 0;
+}
+#deheir_page .diheir-core__static-img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+  z-index: 2;
+  pointer-events: none;
+}
+#deheir_page.is-mode-image .diheir-core__static-img {
+  display: block;
+}
+#deheir_page.is-mode-image .diheir-core__video,
+#deheir_page.is-mode-image .diheir-core__poster {
+  display: none !important;
 }
 #deheir_page .diheir-core__video {
   position: absolute;
@@ -1568,7 +1600,6 @@ body::-webkit-scrollbar {
     width: 100vw;
     height: 100vh;
     height: 100dvh;
-    overflow: hidden;
     pointer-events: none;
     will-change: transform;
   }
@@ -1936,6 +1967,145 @@ body::-webkit-scrollbar {
     font-size: 22px !important;
   }
 }
+
+/* ---------- 진단 모드 (Diagnostic HUD: ?diag=1) ---------- */
+.diheir-diag-hud {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 999999;
+  background: rgba(22, 24, 21, 0.94);
+  color: #f7f7ec;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  padding: 12px 14px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  border: 1px solid rgba(231, 232, 207, 0.28);
+  max-width: 380px;
+  width: calc(100vw - 28px);
+  pointer-events: auto;
+  user-select: text;
+  -webkit-user-select: text;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-sizing: border-box;
+}
+.diheir-diag-hud * { box-sizing: border-box; }
+.diheir-diag-hud--minimized {
+  width: auto;
+  max-width: none;
+  padding: 6px 12px;
+}
+.diheir-diag-hud--minimized .diheir-diag-hud__body {
+  display: none !important;
+}
+.diheir-diag-hud__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(231, 232, 207, 0.18);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+.diheir-diag-hud__fps {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: -0.2px;
+}
+.diheir-diag-hud__fps--good { background: #2e7d32; color: #fff; }
+.diheir-diag-hud__fps--mid { background: #f57f17; color: #fff; }
+.diheir-diag-hud__fps--bad { background: #c62828; color: #fff; }
+
+.diheir-diag-hud__modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.diheir-diag-hud__btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e7e8cf;
+  border: 1px solid rgba(231, 232, 207, 0.22);
+  border-radius: 4px;
+  padding: 6px 4px;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+.diheir-diag-hud__btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+.diheir-diag-hud__btn.is-active {
+  background: #e7e8cf;
+  color: #1a1a1a;
+  font-weight: 700;
+  border-color: #e7e8cf;
+}
+.diheir-diag-hud__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5px;
+  margin-bottom: 8px;
+}
+.diheir-diag-hud__table td {
+  padding: 2px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.diheir-diag-hud__table td:first-child {
+  color: #aba998;
+  width: 44%;
+}
+.diheir-diag-hud__table td:last-child {
+  font-family: SFMono-Regular, Consolas, Menlo, monospace;
+}
+.diheir-diag-hud__actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.diheir-diag-hud__act-btn {
+  flex: 1;
+  background: #383629;
+  color: #e7e8cf;
+  border: 1px solid #716f5c;
+  border-radius: 4px;
+  padding: 7px;
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s;
+}
+.diheir-diag-hud__act-btn:hover {
+  background: #4a4737;
+}
+.diheir-diag-hud__toast {
+  position: absolute;
+  bottom: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2e7d32;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.diheir-diag-hud__toast.is-show {
+  opacity: 1;
+}
 </style>
 </head>
 <body style="margin:0">
@@ -2103,7 +2273,9 @@ body::-webkit-scrollbar {
           <div class="diheir-core__clip">
             <div class="diheir-core__bg"></div>
             <div class="diheir-core__video-wrap">
-              <iframe class="diheir-core__video diheir-core__video--pc" data-src="https://player.vimeo.com/video/1211853153?background=1&amp;autoplay=1&amp;loop=1&amp;muted=1&amp;autopause=0&amp;dnt=1" src="" title="디에르 브랜드 영상" allow="autoplay; fullscreen; picture-in-picture" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+              <div class="diheir-core__poster diheir-core__poster--pc" aria-hidden="true"></div>
+              <img class="diheir-core__static-img diheir-core__static-img--pc" src="component/img/04_Services_core/Rectangle_12.jpg" alt="" loading="lazy">
+              <iframe class="diheir-core__video diheir-core__video--pc" data-src="https://player.vimeo.com/video/1211853153?background=1&amp;autoplay=1&amp;loop=1&amp;muted=1&amp;autopause=0&amp;dnt=1&amp;api=1" src="" title="디에르 브랜드 영상" allow="autoplay; fullscreen; picture-in-picture" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
             </div>
             <div class="diheir-core__overlay"></div>
           </div>
@@ -2135,7 +2307,9 @@ body::-webkit-scrollbar {
         </div>
         <div class="diheir-core__mo-video-box">
           <div class="diheir-core__mo-video-inner">
-            <iframe class="diheir-core__video diheir-core__video--mo" data-src="https://player.vimeo.com/video/1211853153?background=1&amp;autoplay=1&amp;loop=1&amp;muted=1&amp;autopause=0&amp;dnt=1" src="" title="디에르 브랜드 영상 (모바일)" allow="autoplay; fullscreen; picture-in-picture" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <div class="diheir-core__poster diheir-core__poster--mo" aria-hidden="true"></div>
+            <img class="diheir-core__static-img diheir-core__static-img--mo" src="component/img/04_Services_core/Rectangle_12.jpg" alt="" loading="lazy">
+            <iframe class="diheir-core__video diheir-core__video--mo" data-src="https://player.vimeo.com/video/1211853153?background=1&amp;autoplay=1&amp;loop=1&amp;muted=1&amp;autopause=0&amp;dnt=1&amp;api=1" src="" title="디에르 브랜드 영상 (모바일)" allow="autoplay; fullscreen; picture-in-picture" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
             <div class="diheir-core__overlay"></div>
           </div>
           <div class="diheir-core__quote diheir-cap">
@@ -2714,7 +2888,7 @@ body::-webkit-scrollbar {
     }
   }
 
-  /* ---------- Services_core 스크롤 인터랙션 (diheir.com 원본 동일 사양 / RAF 보간 최적화) ---------- */
+  /* ---------- Services_core 스크롤 인터랙션 및 진단 모드 (diheir.com 원본 동일 사양 / 태블릿 최적화) ---------- */
   var coreSec = root.querySelector('[data-name="Services_core"]');
   if (coreSec) {
     var stageEl = coreSec.querySelector('.diheir-core__stage');
@@ -2725,6 +2899,8 @@ body::-webkit-scrollbar {
     var pcSideL = coreSec.querySelectorAll('.diheir-core__side--15, .diheir-core__side--14');
     var pcSideR = coreSec.querySelectorAll('.diheir-core__side--12, .diheir-core__side--13');
     var pcIframe = coreSec.querySelector('.diheir-core__video--pc');
+    var pcPoster = coreSec.querySelector('.diheir-core__poster--pc');
+    var pcStaticImg = coreSec.querySelector('.diheir-core__static-img--pc');
 
     var moCards = coreSec.querySelectorAll('.diheir-core__mo-card');
     var moCardsWrap = coreSec.querySelector('.diheir-core__mo-cards');
@@ -2732,6 +2908,28 @@ body::-webkit-scrollbar {
     var moVideoInner = moVideoBox ? moVideoBox.querySelector('.diheir-core__mo-video-inner') : null;
     var moQuote = moVideoBox ? moVideoBox.querySelector('.diheir-core__quote') : null;
     var moIframe = coreSec.querySelector('.diheir-core__video--mo');
+    var moPoster = coreSec.querySelector('.diheir-core__poster--mo');
+    var moStaticImg = coreSec.querySelector('.diheir-core__static-img--mo');
+
+    // 진단 모드 상태 (?diag=1 또는 ?mode=video|paused|image|nocounter)
+    var urlParams = new URLSearchParams(window.location.search);
+    var isDiagMode = urlParams.get('diag') === '1';
+    var currentMode = urlParams.get('mode') || 'video'; // 'video' | 'paused' | 'image' | 'nocounter'
+    if (['video', 'paused', 'image', 'nocounter'].indexOf(currentMode) === -1) {
+      currentMode = 'video';
+    }
+
+    // 텔레메트리 & 타임라인 기록 변수
+    var vimeoStatus = 'not_loaded'; // 'not_loaded' | 'loading' | 'ready' | 'playing' | 'paused'
+    var diagTimeline = [];
+    var frameDrops33 = 0;
+    var frameDrops50 = 0;
+    var targetJumps = 0;
+    var resizeCount = 0;
+    var lastFpsCalc = performance.now();
+    var frameCount = 0;
+    var currentFps = 60;
+    var prevTargetP = 0;
 
     var isMobile = false;
     var prevIsMobile = null;
@@ -2763,7 +2961,27 @@ body::-webkit-scrollbar {
     var lastTime = 0;
     var rafId = null;
 
+    // 모드 적용 헬퍼
+    function applyDiagnosticMode(mode) {
+      currentMode = mode;
+      root.classList.remove('is-mode-image');
+
+      if (currentMode === 'image') {
+        root.classList.add('is-mode-image');
+        setVimeoPlayback(false);
+      } else if (currentMode === 'paused') {
+        loadActiveIframe();
+        setVimeoPlayback(false);
+      } else {
+        // video or nocounter
+        loadActiveIframe();
+        setVimeoPlayback(true);
+      }
+      updateHudUI();
+    }
+
     function setVimeoPlayback(play) {
+      if (currentMode === 'image' || currentMode === 'paused') play = false;
       var active = isMobile ? moIframe : pcIframe;
       if (!active || !active.contentWindow) return;
       var msg = play ? '{"method":"play"}' : '{"method":"pause"}';
@@ -2772,23 +2990,45 @@ body::-webkit-scrollbar {
       } catch (e) {}
     }
 
-    function syncActiveIframe(inView) {
+    function loadActiveIframe() {
+      if (currentMode === 'image') return;
       var active = isMobile ? moIframe : pcIframe;
       var inactive = isMobile ? pcIframe : moIframe;
 
-      // Inactive iframe has its source completely cleared so it doesn't stream or decode
+      // Inactive iframe has its source cleared to release GPU texture memory
       if (inactive && inactive.getAttribute('src')) {
         inactive.setAttribute('src', '');
       }
 
-      // Active iframe gets its source loaded if in view
-      if (inView && active) {
+      if (active) {
         var dSrc = active.getAttribute('data-src');
         if (dSrc && active.getAttribute('src') !== dSrc) {
+          vimeoStatus = 'loading';
           active.setAttribute('src', dSrc);
         }
       }
     }
+
+    // Vimeo postMessage 리스너
+    window.addEventListener('message', function (e) {
+      var data = e.data;
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch (err) { return; }
+      }
+      if (!data) return;
+      if (data.event === 'ready') {
+        vimeoStatus = 'ready';
+        updateHudUI();
+      } else if (data.event === 'play' || data.event === 'playing') {
+        vimeoStatus = 'playing';
+        if (pcPoster) pcPoster.classList.add('is-hidden');
+        if (moPoster) moPoster.classList.add('is-hidden');
+        updateHudUI();
+      } else if (data.event === 'pause') {
+        vimeoStatus = 'paused';
+        updateHudUI();
+      }
+    });
 
     function resetStaleStyles() {
       if (frame30El) frame30El.style.transform = '';
@@ -2806,8 +3046,6 @@ body::-webkit-scrollbar {
       if (moVideoBox) {
         moVideoBox.style.opacity = '';
         moVideoBox.style.transform = '';
-        moVideoBox.style.width = '';
-        moVideoBox.style.height = '';
         moVideoBox.style.borderRadius = '';
       }
       if (moVideoInner) moVideoInner.style.transform = '';
@@ -2828,6 +3066,8 @@ body::-webkit-scrollbar {
     }
 
     function applyCoreRender(progress) {
+      var isNoCounter = (currentMode === 'nocounter');
+
       if (!isMobile) {
         // PC & 태블릿 가로 (GPU 가속 scale & translate3d)
         var leftX = (-473 - (actualWidth - 1920) / 2) * progress;
@@ -2846,16 +3086,20 @@ body::-webkit-scrollbar {
           frame30El.style.transform = 'translate3d(-50%, 0, 0) scale(' + frameScale.toFixed(5) + ')';
         }
 
-        // Clip aperture scale & video counter-scale (clip-path 소프트웨어 래스터화 병목 제거)
+        // Clip aperture scale & video counter-scale
         if (clipEl) {
           var clipScaleX = 1 + (scaleXTargetPC - 1) * progress;
           var clipScaleY = 1 + (scaleYTargetPC - 1) * progress;
           clipEl.style.transform = 'translate3d(-50%, -50%, 0) scale(' + clipScaleX.toFixed(5) + ', ' + clipScaleY.toFixed(5) + ')';
 
           if (videoWrapEl) {
-            var invX = 1 / clipScaleX;
-            var invY = 1 / clipScaleY;
-            videoWrapEl.style.transform = 'translate3d(-50%, -50%, 0) scale(' + invX.toFixed(5) + ', ' + invY.toFixed(5) + ')';
+            if (isNoCounter) {
+              videoWrapEl.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
+            } else {
+              var invX = 1 / clipScaleX;
+              var invY = 1 / clipScaleY;
+              videoWrapEl.style.transform = 'translate3d(-50%, -50%, 0) scale(' + invX.toFixed(5) + ', ' + invY.toFixed(5) + ')';
+            }
           }
         }
 
@@ -2892,7 +3136,6 @@ body::-webkit-scrollbar {
               moQuote.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
             }
           } else if (progress < 0.664) {
-            // 카드 페이드 인 구간 (0.636 ~ 0.664, 기존 0.70~0.73과 동일한 스크롤 px 거리 유지)
             var vOp = (progress - 0.636) / 0.028;
             moVideoBox.style.opacity = vOp.toFixed(4);
             moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
@@ -2909,8 +3152,8 @@ body::-webkit-scrollbar {
             var ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
             var curScaleX = 1 + (scaleXTargetMO - 1) * ease;
             var curScaleY = 1 + (scaleYTargetMO - 1) * ease;
-            var invScaleX = 1 / curScaleX;
-            var invScaleY = 1 / curScaleY;
+            var invScaleX = isNoCounter ? 1 : 1 / curScaleX;
+            var invScaleY = isNoCounter ? 1 : 1 / curScaleY;
 
             moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(' + curScaleX.toFixed(5) + ', ' + curScaleY.toFixed(5) + ')';
             var br = Math.max(0, 8 * (1 - ease));
@@ -2926,11 +3169,11 @@ body::-webkit-scrollbar {
               moQuote.style.transform = 'translate3d(-50%, -50%, 0) scale(' + invScaleX.toFixed(5) + ', ' + invScaleY.toFixed(5) + ')';
             }
           } else {
-            // 전체화면 유지 구간 (0.927 ~ 1.000, 기존과 동일한 스크롤 px 거리 유지)
+            // 전체화면 유지 구간 (0.927 ~ 1.000)
             moVideoBox.style.opacity = '1';
             moVideoBox.style.borderRadius = '0px';
-            var invFinalX = 1 / scaleXTargetMO;
-            var invFinalY = 1 / scaleYTargetMO;
+            var invFinalX = isNoCounter ? 1 : 1 / scaleXTargetMO;
+            var invFinalY = isNoCounter ? 1 : 1 / scaleYTargetMO;
 
             moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(' + scaleXTargetMO.toFixed(5) + ', ' + scaleYTargetMO.toFixed(5) + ')';
             if (moVideoInner) {
@@ -2952,7 +3195,31 @@ body::-webkit-scrollbar {
       if (dt > 0.1) dt = 0.1;
       lastTime = now;
 
+      // 프레임 드롭 감지
+      var dtMs = dt * 1000;
+      if (dtMs > 50) frameDrops50++;
+      else if (dtMs > 33.3) frameDrops33++;
+
+      // FPS 계산 (250ms 주기 평활화)
+      frameCount++;
+      if (now - lastFpsCalc >= 250) {
+        currentFps = Math.round((frameCount * 1000) / (now - lastFpsCalc));
+        frameCount = 0;
+        lastFpsCalc = now;
+      }
+
       var diff = targetProgress - renderProgress;
+
+      // 텔레메트리 링 버퍼 기록 (최근 250개 샘플)
+      diagTimeline.push({
+        t: Math.round(now),
+        scrollY: Math.round(window.pageYOffset || window.scrollY || 0),
+        targetP: Number(targetProgress.toFixed(4)),
+        renderP: Number(renderProgress.toFixed(4)),
+        dtMs: Number(dtMs.toFixed(1)),
+        fps: currentFps
+      });
+      if (diagTimeline.length > 250) diagTimeline.shift();
 
       // 수렴 임계값 도달 시 즉시 목표값 고정 및 루프 정지 (불필요한 지속 실행 차단)
       if (Math.abs(diff) < 0.0002) {
@@ -2960,6 +3227,7 @@ body::-webkit-scrollbar {
         applyCoreRender(renderProgress);
         isAnimating = false;
         rafId = null;
+        updateHudUI();
         return;
       }
 
@@ -2969,12 +3237,19 @@ body::-webkit-scrollbar {
       renderProgress += diff * factor;
 
       applyCoreRender(renderProgress);
+      updateHudUI();
 
       rafId = requestAnimationFrame(tick);
     }
 
     function requestTick(immediate) {
       targetProgress = computeTargetProgress();
+
+      // 목표 진행률 점프 감지
+      if (Math.abs(targetProgress - prevTargetP) > 0.08) {
+        targetJumps++;
+      }
+      prevTargetP = targetProgress;
 
       if (immediate) {
         if (rafId) {
@@ -2984,6 +3259,7 @@ body::-webkit-scrollbar {
         renderProgress = targetProgress;
         applyCoreRender(renderProgress);
         isAnimating = false;
+        updateHudUI();
         return;
       }
 
@@ -2995,6 +3271,7 @@ body::-webkit-scrollbar {
     }
 
     function handleCoreResize(force) {
+      resizeCount++;
       var newW = window.innerWidth;
       var newH = window.innerHeight;
 
@@ -3022,7 +3299,7 @@ body::-webkit-scrollbar {
 
       if (modeSwitched) {
         resetStaleStyles();
-        syncActiveIframe(true);
+        loadActiveIframe();
       }
 
       coreHeight = coreSec.offsetHeight;
@@ -3048,6 +3325,23 @@ body::-webkit-scrollbar {
 
         scaleXTargetPC = actualWidth / 1404;
         scaleYTargetPC = internalVh / 637;
+
+        // PC 비디오 iframe 최적 종횡비 정밀 산정 (과도한 텍스처 팽창 방지)
+        if (pcIframe) {
+          var targetW = actualWidth;
+          var targetH = internalVh;
+          var videoW = targetW;
+          var videoH = targetH;
+          if (targetW / targetH > 16 / 9) {
+            videoW = targetW;
+            videoH = Math.ceil(targetW * 9 / 16);
+          } else {
+            videoH = targetH;
+            videoW = Math.ceil(targetH * 16 / 9);
+          }
+          pcIframe.style.width = (videoW + 2) + 'px';
+          pcIframe.style.height = (videoH + 2) + 'px';
+        }
       } else {
         if (moCardsWrap) {
           moBaseW = moCardsWrap.offsetWidth || Math.min(winW * 0.88, winH * 0.70 * 700 / 780, 540);
@@ -3076,6 +3370,144 @@ body::-webkit-scrollbar {
       requestTick(true);
     }
 
+    // 진단 HUD UI 렌더링 및 이벤트 바인딩
+    var hudEl = null;
+    function initDiagnosticHUD() {
+      if (!isDiagMode) return;
+      hudEl = document.createElement('div');
+      hudEl.className = 'diheir-diag-hud';
+      hudEl.innerHTML = [
+        '<div class="diheir-diag-hud__header">',
+        '  <span>DIHEIR Core Telemetry</span>',
+        '  <span class="diheir-diag-hud__fps diheir-diag-hud__fps--good" id="hudFps">60 FPS</span>',
+        '</div>',
+        '<div class="diheir-diag-hud__body">',
+        '  <div class="diheir-diag-hud__modes">',
+        '    <button type="button" class="diheir-diag-hud__btn" data-mode="video">1. Video(기본)</button>',
+        '    <button type="button" class="diheir-diag-hud__btn" data-mode="paused">2. Paused</button>',
+        '    <button type="button" class="diheir-diag-hud__btn" data-mode="image">3. 정지이미지</button>',
+        '    <button type="button" class="diheir-diag-hud__btn" data-mode="nocounter">4. NoCounter</button>',
+        '  </div>',
+        '  <table class="diheir-diag-hud__table">',
+        '    <tr><td>Layout / 해상도</td><td id="hudLayout">PC (1920x1080)</td></tr>',
+        '    <tr><td>Active Iframe 크기</td><td id="hudIframe">1920x1080</td></tr>',
+        '    <tr><td>Vimeo 상태</td><td id="hudVimeo">idle</td></tr>',
+        '    <tr><td>Target P / Render P</td><td id="hudProgress">0.000 / 0.000</td></tr>',
+        '    <tr><td>ScrollY / Dist</td><td id="hudScroll">0 / 1000px</td></tr>',
+        '    <tr><td>FrameDrops (>33/50)</td><td id="hudDrops">0 / 0</td></tr>',
+        '    <tr><td>입력점프 / 리사이즈</td><td id="hudJumps">0 / 0</td></tr>',
+        '  </table>',
+        '  <div class="diheir-diag-hud__actions">',
+        '    <button type="button" class="diheir-diag-hud__act-btn" id="hudCopyBtn">📋 진단 데이터 복사</button>',
+        '    <button type="button" class="diheir-diag-hud__act-btn" id="hudToggleBtn">접기</button>',
+        '  </div>',
+        '  <div class="diheir-diag-hud__toast" id="hudToast">진단 데이터가 클립보드에 복사되었습니다!</div>',
+        '</div>'
+      ].join('');
+
+      document.body.appendChild(hudEl);
+
+      hudEl.querySelectorAll('.diheir-diag-hud__btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var m = btn.getAttribute('data-mode');
+          applyDiagnosticMode(m);
+        });
+      });
+
+      var toggleBtn = hudEl.querySelector('#hudToggleBtn');
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', function () {
+          var isMin = hudEl.classList.toggle('diheir-diag-hud--minimized');
+          toggleBtn.textContent = isMin ? '펼치기' : '접기';
+        });
+      }
+
+      var copyBtn = hudEl.querySelector('#hudCopyBtn');
+      var toastEl = hudEl.querySelector('#hudToast');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', function () {
+          var exportData = {
+            device: {
+              userAgent: navigator.userAgent,
+              innerWidth: window.innerWidth,
+              innerHeight: window.innerHeight,
+              devicePixelRatio: window.devicePixelRatio || 1,
+              isMobileBranch: isMobile
+            },
+            summary: {
+              mode: currentMode,
+              vimeoStatus: vimeoStatus,
+              currentFps: currentFps,
+              frameDrops33ms: frameDrops33,
+              frameDrops50ms: frameDrops50,
+              targetJumps: targetJumps,
+              resizeCount: resizeCount,
+              totalRecordedFrames: diagTimeline.length
+            },
+            recentTimeline: diagTimeline.slice(-100)
+          };
+
+          var text = JSON.stringify(exportData, null, 2);
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () {
+              if (toastEl) {
+                toastEl.classList.add('is-show');
+                setTimeout(function () { toastEl.classList.remove('is-show'); }, 2000);
+              }
+            });
+          } else {
+            window.prompt('진단 데이터 복사 (Ctrl+C / Cmd+C):', text);
+          }
+        });
+      }
+
+      applyDiagnosticMode(currentMode);
+    }
+
+    function updateHudUI() {
+      if (!isDiagMode || !hudEl) return;
+      var fpsEl = hudEl.querySelector('#hudFps');
+      if (fpsEl) {
+        fpsEl.textContent = currentFps + ' FPS';
+        fpsEl.className = 'diheir-diag-hud__fps ' +
+          (currentFps >= 54 ? 'diheir-diag-hud__fps--good' : (currentFps >= 38 ? 'diheir-diag-hud__fps--mid' : 'diheir-diag-hud__fps--bad'));
+      }
+
+      hudEl.querySelectorAll('.diheir-diag-hud__btn').forEach(function (btn) {
+        var m = btn.getAttribute('data-mode');
+        if (m === currentMode) btn.classList.add('is-active');
+        else btn.classList.remove('is-active');
+      });
+
+      var layoutEl = hudEl.querySelector('#hudLayout');
+      if (layoutEl) layoutEl.textContent = (isMobile ? 'MO' : 'PC') + ' (' + winW + 'x' + winH + ')';
+
+      var iframeEl = hudEl.querySelector('#hudIframe');
+      if (iframeEl) {
+        var activeIf = isMobile ? moIframe : pcIframe;
+        if (currentMode === 'image') {
+          iframeEl.textContent = 'None (정지이미지)';
+        } else if (activeIf) {
+          iframeEl.textContent = (activeIf.offsetWidth || 0) + 'x' + (activeIf.offsetHeight || 0) + 'px';
+        }
+      }
+
+      var vimeoEl = hudEl.querySelector('#hudVimeo');
+      if (vimeoEl) vimeoEl.textContent = vimeoStatus;
+
+      var progEl = hudEl.querySelector('#hudProgress');
+      if (progEl) progEl.textContent = targetProgress.toFixed(3) + ' / ' + renderProgress.toFixed(3) + ' (Δ' + Math.abs(targetProgress - renderProgress).toFixed(3) + ')';
+
+      var scrollEl = hudEl.querySelector('#hudScroll');
+      if (scrollEl) scrollEl.textContent = Math.round(window.pageYOffset || window.scrollY || 0) + ' / ' + Math.round(scrollDist) + 'px';
+
+      var dropsEl = hudEl.querySelector('#hudDrops');
+      if (dropsEl) dropsEl.textContent = frameDrops33 + ' / ' + frameDrops50;
+
+      var jumpsEl = hudEl.querySelector('#hudJumps');
+      if (jumpsEl) jumpsEl.textContent = targetJumps + ' / ' + resizeCount;
+    }
+
     window.addEventListener('scroll', function () {
       requestTick(false);
     }, { passive: true });
@@ -3097,29 +3529,44 @@ body::-webkit-scrollbar {
           rafId = null;
         }
         isAnimating = false;
+        setVimeoPlayback(false);
       } else {
         requestTick(true);
       }
     });
 
+    // 1 뷰포트 전 사전 준비(Preload) Observer & 뷰포트 진입 재생 Observer 분리
     if ('IntersectionObserver' in window) {
-      var coreObserver = new IntersectionObserver(function (entries) {
+      // 100% 뷰포트 사전 로드: 사용자가 상단 헤리티지 섹션 통과 시점에 Vimeo 아이프레임 로드 시작
+      var preloadObserver = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
           if (entry.isIntersecting) {
             coreOffsetTop = coreSec.getBoundingClientRect().top + (window.pageYOffset || window.scrollY || 0);
-            syncActiveIframe(true);
+            loadActiveIframe();
+          }
+        });
+      }, { rootMargin: '100% 0px' });
+      preloadObserver.observe(coreSec);
+
+      // 정확한 뷰포트 진입/이탈 감지: 진입 시 음소거 재생, 이탈 시 일시정지
+      var viewObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            coreOffsetTop = coreSec.getBoundingClientRect().top + (window.pageYOffset || window.scrollY || 0);
             setVimeoPlayback(true);
             requestTick(false);
           } else {
             setVimeoPlayback(false);
           }
         });
-      }, { rootMargin: '300px 0px' });
-      coreObserver.observe(coreSec);
+      }, { rootMargin: '0px' });
+      viewObserver.observe(coreSec);
     } else {
-      syncActiveIframe(true);
+      loadActiveIframe();
+      setVimeoPlayback(true);
     }
 
+    initDiagnosticHUD();
     handleCoreResize(true);
   }
 

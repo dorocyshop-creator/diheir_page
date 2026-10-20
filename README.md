@@ -329,3 +329,34 @@ Figma MCP(`get_design_context`, 스크린샷)로 실제 프레임·레이어 속
    - **영상 확대 거리**: 784.7px → **1,197.9px** (**1.526배 증가**, +413.2px)
    - 전체화면 유지 거리: 330.4px → **330.4px** (동일)
 
+### 4) 태블릿 성능 진단(4대 조건 비교) 및 Vimeo 라이프사이클 최적화
+
+1. **태블릿과 모바일 휴대폰의 동작 차이 원인 규명**:
+   - **반응형 분기(Breakpoint) 비대칭**: 휴대폰(너비 360~430px)은 항상 **MO 레이아웃**이 적용되어 텍스처 크기가 1500×844px 수준이고 단일 스케일만 연산합니다.
+   - 반면 태블릿은 가로 모드(1024×768, 1180×820, 1194×834)뿐만 아니라 iPad Pro 12.9" 세로 모드(1024×1366)에서도 `winW >= 1024`로 판정되어 **PC 레이아웃**이 적용됩니다.
+   - PC 레이아웃에서는 `currentScale = winW / 1920`, `internalVh = winH / currentScale`로 역계산되어 태블릿 세로 시 `internalVh`가 최대 2561px에 달하며, 이로 인해 iframe 백버퍼가 4553×2561px(레티나 2x 환산 시 9100×5122, 텍스처 메모리 약 46MB 이상)에 달하게 됩니다.
+   - 여기에 `stage -> frame30 -> clip -> video-wrap`의 4중첩 `transform`과 부모-자식 간의 중복 `overflow: hidden`이 결합되면서 WebKit 컴포지터 큐 정체(Compositor Queue Stall) 및 프레임 드롭이 발생했습니다.
+
+2. **중복 오프스크린 FBO(Frame Buffer Object) 제거**:
+   - PC `.diheir-core__video-wrap` 및 MO `.diheir-core__mo-video-inner`의 불필요한 `overflow: hidden`을 제거했습니다.
+   - 상위 컨테이너(`.diheir-core__clip` 및 `.diheir-core__mo-video-box`)가 이미 클리핑 경계를 완벽히 제어하므로, 매 프레임마다 하위 레이어에서 불필요하게 생성되던 중복 래스터화 FBO를 제거하여 GPU 부담을 대폭 경감했습니다.
+
+3. **1 뷰포트 전 사전 준비(Preload) 및 Vimeo 라이프사이클 관리**:
+   - **Preload Observer (`rootMargin: '100% 0px'`)**: 사용자가 코어 섹션에 진입하기 약 1 뷰포트 전(상단 헤리티지 섹션 탐색 시점)에 비디오 iframe의 `src`를 미리 로드하여, 무거운 Vimeo 플레이어 번들 다운로드, 스크립트 실행, WebGL 컨텍스트 생성이 스크롤 애니메이션과 겹치지 않도록 사전 분리했습니다.
+   - **View Observer (`rootMargin: '0px'`)**: 화면 진입 시점에만 postMessage `play`를 전송하여 음소거 자동 재생을 시작하고, 뷰포트 이탈 시 즉시 `pause`를 호출하여 백그라운드 리소스 소모를 차단합니다.
+   - **Vimeo API 연동 및 포스터 레이어**:
+     - iframe URL에 `&api=1` 파라미터를 추가하고 `window` 메시지 리스너를 통해 Vimeo 플레이어의 `ready`, `play/playing` 이벤트를 직접 핸드셰이크합니다.
+     - 영상 프레임이 디코딩되기 전까지 빈 화면이나 검은 화면이 깜빡이지 않도록 브랜드 카드 포스터 레이어(`.diheir-core__poster`)를 배치하고, 실제 `play/playing` 이벤트 수신 시 부드럽게 페이드아웃되도록 처리했습니다.
+
+4. **실기기 성능 검증을 위한 진단 모드 (Diagnostic HUD)**:
+   - URL 파라미터 `?diag=1` 접속 시 실시간 텔레메트리 HUD가 활성화됩니다.
+   - **4가지 비교 조건 실시간 전환 지원**:
+     1. `mode=video` (기본 동영상 재생 및 카운터 스케일링)
+     2. `mode=paused` (동영상 로드 후 일시정지 상태 비교)
+     3. `mode=image` (iframe을 완전히 동일한 크기의 고해상도 정지 이미지로 대체)
+     4. `mode=nocounter` (동영상 재생 중 내부 counter-scaling만 비활성화하여 중첩 transform 병목 진단)
+   - **실시간 계측 및 타임라인 JSON 내보내기**:
+     - 실시간 FPS (60 / 120Hz ProMotion 감지)
+     - Target Progress vs Render Progress (및 편차 $\Delta$)
+     - RAF 간격(`dtMs`), 33.3ms / 50ms 초과 프레임 드롭 카운트, 스크롤 입력 급점프 횟수, 리사이즈 이벤트 횟수
+     - `[📋 진단 데이터 복사]` 클릭 시 기기 사양, 진단 요약 및 최근 100개 프레임의 타임라인 데이터가 클립보드에 JSON 형식으로 즉시 복사됩니다.
