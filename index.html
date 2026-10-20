@@ -44,12 +44,17 @@
   font-display: swap;
 }
 
-/* 세로 스크롤바 숨김 (스크롤 동작 유지) 및 가로 스크롤 방지 */
+/* 세로 스크롤바 숨김 (스크롤 동작 유지), 가로 스크롤 방지, 드래그 및 이미지 저장 방지 */
 html, body {
   scrollbar-width: none;
   -ms-overflow-style: none;
   overflow-x: clip;
   -webkit-tap-highlight-color: transparent !important;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
@@ -65,6 +70,11 @@ body::-webkit-scrollbar {
 #deheir_page {
   scrollbar-width: none;
   -ms-overflow-style: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   --u: calc(min(100vw, 1920px) / 1920);
   --uf: max(calc(min(100vw, 1920px) / 1920), 0.75px);
   --diheir-en: "DreamAvenue", serif;
@@ -92,6 +102,10 @@ body::-webkit-scrollbar {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent !important;
   -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 #deheir_page *:focus,
 #deheir_page *:focus-visible,
@@ -102,8 +116,21 @@ body::-webkit-scrollbar {
 #deheir_page h1, #deheir_page h2, #deheir_page h3, #deheir_page p {
   margin: 0; font-size: inherit; font-weight: inherit; line-height: inherit;
 }
-#deheir_page img { display: block; max-width: none; border: 0; user-select: none; -webkit-user-drag: none; }
-#deheir_page a { color: inherit; text-decoration: none; outline: none !important; }
+#deheir_page img {
+  display: block;
+  max-width: none;
+  border: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  -webkit-touch-callout: none;
+  pointer-events: auto;
+}
+#deheir_page a { color: inherit; text-decoration: none; outline: none !important; -webkit-user-drag: none; user-drag: none; }
 #deheir_page strong { font-weight: 700; }
 #deheir_page button { font: inherit; color: inherit; margin: 0; outline: none !important; border: none; }
 #deheir_page a:focus,
@@ -2438,6 +2465,20 @@ body::-webkit-scrollbar {
   if (!root) return;
   root.classList.add('js-motion');
 
+  /* ---------- 페이지 드래그 및 이미지 저장 방지 ---------- */
+  document.addEventListener('contextmenu', function (e) {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    e.preventDefault();
+  }, false);
+  document.addEventListener('dragstart', function (e) {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    e.preventDefault();
+  }, false);
+  document.addEventListener('selectstart', function (e) {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    e.preventDefault();
+  }, false);
+
   /* 01-a nav 로고 호버·클릭 드롭다운 네비게이션 (Drop_Menu) */
   var navLogoWrap = root.querySelector('.diheir-nav__logo-wrap');
   var navLogoBtn = root.querySelector('.diheir-nav__logo');
@@ -2673,7 +2714,7 @@ body::-webkit-scrollbar {
     }
   }
 
-  /* ---------- Services_core 스크롤 인터랙션 (diheir.com 원본 동일 사양 / GPU 가속 최적화) ---------- */
+  /* ---------- Services_core 스크롤 인터랙션 (diheir.com 원본 동일 사양 / RAF 보간 최적화) ---------- */
   var coreSec = root.querySelector('[data-name="Services_core"]');
   if (coreSec) {
     var stageEl = coreSec.querySelector('.diheir-core__stage');
@@ -2714,6 +2755,13 @@ body::-webkit-scrollbar {
     var moBaseH = 0;
     var scaleXTargetMO = 1;
     var scaleYTargetMO = 1;
+
+    // Smooth RAF dampening state
+    var targetProgress = 0;
+    var renderProgress = 0;
+    var isAnimating = false;
+    var lastTime = 0;
+    var rafId = null;
 
     function setVimeoPlayback(play) {
       var active = isMobile ? moIframe : pcIframe;
@@ -2769,13 +2817,187 @@ body::-webkit-scrollbar {
       }
     }
 
+    function computeTargetProgress() {
+      var scrollY = window.pageYOffset || window.scrollY || 0;
+      var currentTop = coreOffsetTop - scrollY;
+
+      if (currentTop > winH * 1.5) return 0;
+      if (currentTop + coreHeight < -winH * 0.5) return 1;
+
+      return Math.max(0, Math.min(1, -currentTop / scrollDist));
+    }
+
+    function applyCoreRender(progress) {
+      if (!isMobile) {
+        // PC & 태블릿 가로 (GPU 가속 scale & translate3d)
+        var leftX = (-473 - (actualWidth - 1920) / 2) * progress;
+        var rightX = (465 + (actualWidth - 1920) / 2) * progress;
+
+        for (var i = 0; i < pcSideL.length; i++) {
+          pcSideL[i].style.transform = 'translate3d(' + leftX.toFixed(2) + 'px, 0, 0)';
+        }
+        for (var j = 0; j < pcSideR.length; j++) {
+          pcSideR[j].style.transform = 'translate3d(' + rightX.toFixed(2) + 'px, 0, 0)';
+        }
+
+        // 중앙 Frame30 scale: 0.7 -> 1.0 (연속적 GPU 스케일)
+        var frameScale = 0.7 + 0.3 * progress;
+        if (frame30El) {
+          frame30El.style.transform = 'translate3d(-50%, 0, 0) scale(' + frameScale.toFixed(5) + ')';
+        }
+
+        // Clip aperture scale & video counter-scale (clip-path 소프트웨어 래스터화 병목 제거)
+        if (clipEl) {
+          var clipScaleX = 1 + (scaleXTargetPC - 1) * progress;
+          var clipScaleY = 1 + (scaleYTargetPC - 1) * progress;
+          clipEl.style.transform = 'translate3d(-50%, -50%, 0) scale(' + clipScaleX.toFixed(5) + ', ' + clipScaleY.toFixed(5) + ')';
+
+          if (videoWrapEl) {
+            var invX = 1 / clipScaleX;
+            var invY = 1 / clipScaleY;
+            videoWrapEl.style.transform = 'translate3d(-50%, -50%, 0) scale(' + invX.toFixed(5) + ', ' + invY.toFixed(5) + ')';
+          }
+        }
+
+        // Text opacity: progress 0.52~0.92 부드러운 페이드아웃
+        var textOp = progress < 0.52 ? 1 : Math.max(0, 1 - (progress - 0.52) / 0.40);
+        if (quoteWrapEl) {
+          quoteWrapEl.style.opacity = textOp.toFixed(4);
+        }
+      } else {
+        // 모바일 & 태블릿 세로
+        function cardOpacity(p, start, peak1, peak2, end) {
+          if (p < start || p > end) return 0;
+          if (p < peak1) return (p - start) / (peak1 - start);
+          if (p <= peak2) return 1;
+          return 1 - (p - peak2) / (end - peak2);
+        }
+
+        if (moCards.length >= 4) {
+          moCards[0].style.opacity = cardOpacity(progress, 0, 0, 0.16, 0.19).toFixed(4);
+          moCards[1].style.opacity = cardOpacity(progress, 0.17, 0.20, 0.34, 0.37).toFixed(4);
+          moCards[2].style.opacity = cardOpacity(progress, 0.35, 0.38, 0.52, 0.55).toFixed(4);
+          moCards[3].style.opacity = cardOpacity(progress, 0.53, 0.56, 0.70, 0.73).toFixed(4);
+        }
+
+        if (moVideoBox) {
+          if (progress < 0.70) {
+            moVideoBox.style.opacity = '0';
+            moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
+            moVideoBox.style.borderRadius = '8px';
+            if (moVideoInner) moVideoInner.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
+            if (moQuote) {
+              moQuote.style.opacity = '1';
+              moQuote.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
+            }
+          } else if (progress < 0.73) {
+            // 페이드 인 구간 (0.70 ~ 0.73)
+            var vOp = (progress - 0.70) / 0.03;
+            moVideoBox.style.opacity = vOp.toFixed(4);
+            moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
+            moVideoBox.style.borderRadius = '8px';
+            if (moVideoInner) moVideoInner.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
+            if (moQuote) {
+              moQuote.style.opacity = '1';
+              moQuote.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
+            }
+          } else if (progress < 0.92) {
+            // 부드러운 GPU 가속 확장 구간 (0.73 ~ 0.92) - 왜곡 방지 역보정
+            moVideoBox.style.opacity = '1';
+            var t = (progress - 0.73) / 0.19;
+            var ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
+            var curScaleX = 1 + (scaleXTargetMO - 1) * ease;
+            var curScaleY = 1 + (scaleYTargetMO - 1) * ease;
+            var invScaleX = 1 / curScaleX;
+            var invScaleY = 1 / curScaleY;
+
+            moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(' + curScaleX.toFixed(5) + ', ' + curScaleY.toFixed(5) + ')';
+            var br = Math.max(0, 8 * (1 - ease));
+            moVideoBox.style.borderRadius = br.toFixed(2) + 'px';
+
+            if (moVideoInner) {
+              moVideoInner.style.transform = 'translate3d(-50%, -50%, 0) scale(' + invScaleX.toFixed(5) + ', ' + invScaleY.toFixed(5) + ')';
+            }
+
+            if (moQuote) {
+              var qOp = progress < 0.75 ? 1 : (progress >= 0.85 ? 0 : 1 - (progress - 0.75) / 0.10);
+              moQuote.style.opacity = qOp.toFixed(4);
+              moQuote.style.transform = 'translate3d(-50%, -50%, 0) scale(' + invScaleX.toFixed(5) + ', ' + invScaleY.toFixed(5) + ')';
+            }
+          } else {
+            // 전체화면 유지 구간 (0.92 ~ 1.00)
+            moVideoBox.style.opacity = '1';
+            moVideoBox.style.borderRadius = '0px';
+            var invFinalX = 1 / scaleXTargetMO;
+            var invFinalY = 1 / scaleYTargetMO;
+
+            moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(' + scaleXTargetMO.toFixed(5) + ', ' + scaleYTargetMO.toFixed(5) + ')';
+            if (moVideoInner) {
+              moVideoInner.style.transform = 'translate3d(-50%, -50%, 0) scale(' + invFinalX.toFixed(5) + ', ' + invFinalY.toFixed(5) + ')';
+            }
+            if (moQuote) {
+              moQuote.style.opacity = '0';
+              moQuote.style.transform = 'translate3d(-50%, -50%, 0) scale(' + invFinalX.toFixed(5) + ', ' + invFinalY.toFixed(5) + ')';
+            }
+          }
+        }
+      }
+    }
+
+    function tick(now) {
+      if (!isAnimating) return;
+      if (!lastTime) lastTime = now;
+      var dt = (now - lastTime) / 1000;
+      if (dt > 0.1) dt = 0.1;
+      lastTime = now;
+
+      var diff = targetProgress - renderProgress;
+
+      // 수렴 임계값 도달 시 즉시 목표값 고정 및 루프 정지 (불필요한 지속 실행 차단)
+      if (Math.abs(diff) < 0.0002) {
+        renderProgress = targetProgress;
+        applyCoreRender(renderProgress);
+        isAnimating = false;
+        rafId = null;
+        return;
+      }
+
+      // 화면 주사율(60Hz, 120Hz ProMotion) 무관 경과시간(dt) 기반 지수 감쇠 보간
+      var lambda = 14;
+      var factor = 1 - Math.exp(-lambda * dt);
+      renderProgress += diff * factor;
+
+      applyCoreRender(renderProgress);
+
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function requestTick(immediate) {
+      targetProgress = computeTargetProgress();
+
+      if (immediate) {
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        renderProgress = targetProgress;
+        applyCoreRender(renderProgress);
+        isAnimating = false;
+        return;
+      }
+
+      if (!isAnimating) {
+        isAnimating = true;
+        lastTime = performance.now();
+        rafId = requestAnimationFrame(tick);
+      }
+    }
+
     function handleCoreResize(force) {
       var newW = window.innerWidth;
       var newH = window.innerHeight;
 
-      // Address bar toggle detection on mobile/tablet:
-      // If width hasn't changed, height difference is small (<= 120px) and not forced,
-      // it's an address bar show/hide during scrolling.
+      // 주소창 출몰(너비 동일, 높이 미세 변화) 감지
       var widthChanged = Math.abs(newW - prevWinW) > 4;
       var heightDiff = Math.abs(newH - prevWinH);
       var isAddressBarToggle = !force && !widthChanged && heightDiff <= 120 && prevWinW > 0;
@@ -2783,6 +3005,7 @@ body::-webkit-scrollbar {
       if (isAddressBarToggle) {
         winH = newH;
         scrollDist = Math.max(1, coreHeight - winH);
+        requestTick(false);
         return;
       }
 
@@ -2801,7 +3024,6 @@ body::-webkit-scrollbar {
         syncActiveIframe(true);
       }
 
-      // Cache positions to avoid forced layout during scroll
       coreHeight = coreSec.offsetHeight;
       coreOffsetTop = coreSec.getBoundingClientRect().top + (window.pageYOffset || window.scrollY || 0);
       scrollDist = Math.max(1, coreHeight - winH);
@@ -2842,7 +3064,6 @@ body::-webkit-scrollbar {
           moVideoInner.style.height = winH + 'px';
         }
 
-        // Iframe 16:9 cover size calculation (run ONLY on resize, NEVER on scroll)
         if (moIframe) {
           var vW = Math.max(winW, Math.ceil(winH * 16 / 9)) + 2;
           var vH = Math.max(winH, Math.ceil(winW * 9 / 16)) + 2;
@@ -2851,143 +3072,11 @@ body::-webkit-scrollbar {
         }
       }
 
-      updateCoreScroll();
+      requestTick(true);
     }
 
-    function updateCoreScroll() {
-      var scrollY = window.pageYOffset || window.scrollY || 0;
-      var currentTop = coreOffsetTop - scrollY;
-
-      if (currentTop > winH || currentTop + coreHeight < 0) return;
-
-      var progress = Math.max(0, Math.min(1, -currentTop / scrollDist));
-
-      if (!isMobile) {
-        // PC & 태블릿 가로 (GPU 가속 scale & translate3d)
-        var leftX = (-473 - (actualWidth - 1920) / 2) * progress;
-        var rightX = (465 + (actualWidth - 1920) / 2) * progress;
-
-        for (var i = 0; i < pcSideL.length; i++) {
-          pcSideL[i].style.transform = 'translate3d(' + leftX.toFixed(1) + 'px, 0, 0)';
-        }
-        for (var j = 0; j < pcSideR.length; j++) {
-          pcSideR[j].style.transform = 'translate3d(' + rightX.toFixed(1) + 'px, 0, 0)';
-        }
-
-        // 중앙 Frame30 scale: 0.7 -> 1.0 (부드러운 GPU 합성)
-        var frameScale = 0.7 + 0.3 * progress;
-        if (frame30El) {
-          frame30El.style.transform = 'translate3d(-50%, 0, 0) scale(' + frameScale.toFixed(4) + ')';
-        }
-
-        // Clip aperture scale & video counter-scale (clip-path 소프트웨어 래스터화 병목 제거)
-        if (clipEl) {
-          var clipScaleX = 1 + (scaleXTargetPC - 1) * progress;
-          var clipScaleY = 1 + (scaleYTargetPC - 1) * progress;
-          clipEl.style.transform = 'translate3d(-50%, -50%, 0) scale(' + clipScaleX.toFixed(4) + ', ' + clipScaleY.toFixed(4) + ')';
-
-          if (videoWrapEl) {
-            var invX = 1 / clipScaleX;
-            var invY = 1 / clipScaleY;
-            videoWrapEl.style.transform = 'translate3d(-50%, -50%, 0) scale(' + invX.toFixed(4) + ', ' + invY.toFixed(4) + ')';
-          }
-        }
-
-        // Text opacity: progress 0.52~0.92 페이드아웃
-        var textOp = progress < 0.52 ? 1 : Math.max(0, 1 - (progress - 0.52) / 0.40);
-        if (quoteWrapEl) {
-          quoteWrapEl.style.opacity = textOp.toFixed(3);
-        }
-      } else {
-        // 모바일 & 태블릿 세로
-        function cardOpacity(p, start, peak1, peak2, end) {
-          if (p < start || p > end) return 0;
-          if (p < peak1) return (p - start) / (peak1 - start);
-          if (p <= peak2) return 1;
-          return 1 - (p - peak2) / (end - peak2);
-        }
-
-        if (moCards.length >= 4) {
-          moCards[0].style.opacity = cardOpacity(progress, 0, 0, 0.16, 0.19).toFixed(3);
-          moCards[1].style.opacity = cardOpacity(progress, 0.17, 0.20, 0.34, 0.37).toFixed(3);
-          moCards[2].style.opacity = cardOpacity(progress, 0.35, 0.38, 0.52, 0.55).toFixed(3);
-          moCards[3].style.opacity = cardOpacity(progress, 0.53, 0.56, 0.70, 0.73).toFixed(3);
-        }
-
-        // 마지막 비디오 박스 (GPU scale + 역보정 counter-scale로 무리플로우 60fps 보장)
-        if (moVideoBox) {
-          if (progress < 0.70) {
-            moVideoBox.style.opacity = '0';
-            moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
-            moVideoBox.style.borderRadius = '8px';
-            if (moVideoInner) moVideoInner.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
-            if (moQuote) {
-              moQuote.style.opacity = '1';
-              moQuote.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
-            }
-          } else if (progress < 0.73) {
-            // 페이드 인 구간 (0.70 ~ 0.73)
-            var vOp = (progress - 0.70) / 0.03;
-            moVideoBox.style.opacity = vOp.toFixed(3);
-            moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
-            moVideoBox.style.borderRadius = '8px';
-            if (moVideoInner) moVideoInner.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
-            if (moQuote) {
-              moQuote.style.opacity = '1';
-              moQuote.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
-            }
-          } else if (progress < 0.92) {
-            // 부드러운 GPU 가속 확장 구간 (0.73 ~ 0.92)
-            moVideoBox.style.opacity = '1';
-            var t = (progress - 0.73) / 0.19;
-            var ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
-            var curScaleX = 1 + (scaleXTargetMO - 1) * ease;
-            var curScaleY = 1 + (scaleYTargetMO - 1) * ease;
-            var invScaleX = 1 / curScaleX;
-            var invScaleY = 1 / curScaleY;
-
-            moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(' + curScaleX.toFixed(4) + ', ' + curScaleY.toFixed(4) + ')';
-            var br = Math.max(0, 8 * (1 - ease));
-            moVideoBox.style.borderRadius = br.toFixed(1) + 'px';
-
-            if (moVideoInner) {
-              moVideoInner.style.transform = 'translate3d(-50%, -50%, 0) scale(' + invScaleX.toFixed(4) + ', ' + invScaleY.toFixed(4) + ')';
-            }
-
-            if (moQuote) {
-              var qOp = progress < 0.75 ? 1 : Math.max(0, 1 - (progress - 0.75) / 0.10);
-              moQuote.style.opacity = qOp.toFixed(3);
-              moQuote.style.transform = 'translate3d(-50%, -50%, 0) scale(' + invScaleX.toFixed(4) + ', ' + invScaleY.toFixed(4) + ')';
-            }
-          } else {
-            // 전체화면 유지 구간 (0.92 ~ 1.00)
-            moVideoBox.style.opacity = '1';
-            moVideoBox.style.borderRadius = '0px';
-            var invFinalX = 1 / scaleXTargetMO;
-            var invFinalY = 1 / scaleYTargetMO;
-
-            moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(' + scaleXTargetMO.toFixed(4) + ', ' + scaleYTargetMO.toFixed(4) + ')';
-            if (moVideoInner) {
-              moVideoInner.style.transform = 'translate3d(-50%, -50%, 0) scale(' + invFinalX.toFixed(4) + ', ' + invFinalY.toFixed(4) + ')';
-            }
-            if (moQuote) {
-              moQuote.style.opacity = '0';
-              moQuote.style.transform = 'translate3d(-50%, -50%, 0) scale(' + invFinalX.toFixed(4) + ', ' + invFinalY.toFixed(4) + ')';
-            }
-          }
-        }
-      }
-    }
-
-    var ticking = false;
     window.addEventListener('scroll', function () {
-      if (!ticking) {
-        window.requestAnimationFrame(function () {
-          updateCoreScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
+      requestTick(false);
     }, { passive: true });
 
     window.addEventListener('resize', function () {
@@ -3000,6 +3089,18 @@ body::-webkit-scrollbar {
       }, 150);
     });
 
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        isAnimating = false;
+      } else {
+        requestTick(true);
+      }
+    });
+
     if ('IntersectionObserver' in window) {
       var coreObserver = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
@@ -3007,6 +3108,7 @@ body::-webkit-scrollbar {
             coreOffsetTop = coreSec.getBoundingClientRect().top + (window.pageYOffset || window.scrollY || 0);
             syncActiveIframe(true);
             setVimeoPlayback(true);
+            requestTick(false);
           } else {
             setVimeoPlayback(false);
           }
