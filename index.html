@@ -1499,7 +1499,7 @@ body::-webkit-scrollbar {
   #deheir_page .diheir-heritage__intro--2 { margin-top: calc(127 * var(--u)); }
 
   /* Services_core */
-  #deheir_page .diheir-core { height: 450vh; padding: 0; overflow: visible !important; }
+  #deheir_page .diheir-core { height: 485vh; padding: 0; overflow: visible !important; }
   #deheir_page .diheir-core__sticky {
     position: -webkit-sticky;
     position: sticky;
@@ -2873,15 +2873,16 @@ body::-webkit-scrollbar {
           return 1 - (p - peak2) / (end - peak2);
         }
 
+        // 앞부분 4개 카드 전환 거리(px)를 100% 보존 (0.00 ~ 0.664)
         if (moCards.length >= 4) {
-          moCards[0].style.opacity = cardOpacity(progress, 0, 0, 0.16, 0.19).toFixed(4);
-          moCards[1].style.opacity = cardOpacity(progress, 0.17, 0.20, 0.34, 0.37).toFixed(4);
-          moCards[2].style.opacity = cardOpacity(progress, 0.35, 0.38, 0.52, 0.55).toFixed(4);
-          moCards[3].style.opacity = cardOpacity(progress, 0.53, 0.56, 0.70, 0.73).toFixed(4);
+          moCards[0].style.opacity = cardOpacity(progress, 0, 0, 0.145, 0.173).toFixed(4);
+          moCards[1].style.opacity = cardOpacity(progress, 0.155, 0.182, 0.309, 0.336).toFixed(4);
+          moCards[2].style.opacity = cardOpacity(progress, 0.318, 0.345, 0.473, 0.500).toFixed(4);
+          moCards[3].style.opacity = cardOpacity(progress, 0.482, 0.509, 0.636, 0.664).toFixed(4);
         }
 
         if (moVideoBox) {
-          if (progress < 0.70) {
+          if (progress < 0.636) {
             moVideoBox.style.opacity = '0';
             moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
             moVideoBox.style.borderRadius = '8px';
@@ -2890,9 +2891,9 @@ body::-webkit-scrollbar {
               moQuote.style.opacity = '1';
               moQuote.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
             }
-          } else if (progress < 0.73) {
-            // 페이드 인 구간 (0.70 ~ 0.73)
-            var vOp = (progress - 0.70) / 0.03;
+          } else if (progress < 0.664) {
+            // 카드 페이드 인 구간 (0.636 ~ 0.664, 기존 0.70~0.73과 동일한 스크롤 px 거리 유지)
+            var vOp = (progress - 0.636) / 0.028;
             moVideoBox.style.opacity = vOp.toFixed(4);
             moVideoBox.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
             moVideoBox.style.borderRadius = '8px';
@@ -2901,10 +2902,10 @@ body::-webkit-scrollbar {
               moQuote.style.opacity = '1';
               moQuote.style.transform = 'translate3d(-50%, -50%, 0) scale(1, 1)';
             }
-          } else if (progress < 0.92) {
-            // 부드러운 GPU 가속 확장 구간 (0.73 ~ 0.92) - 왜곡 방지 역보정
+          } else if (progress < 0.927) {
+            // 영상 확대 구간 (0.664 ~ 0.927, 기존 대비 약 1.5배 스크롤 거리 확장)
             moVideoBox.style.opacity = '1';
-            var t = (progress - 0.73) / 0.19;
+            var t = (progress - 0.664) / 0.263;
             var ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
             var curScaleX = 1 + (scaleXTargetMO - 1) * ease;
             var curScaleY = 1 + (scaleYTargetMO - 1) * ease;
@@ -2920,12 +2921,12 @@ body::-webkit-scrollbar {
             }
 
             if (moQuote) {
-              var qOp = progress < 0.75 ? 1 : (progress >= 0.85 ? 0 : 1 - (progress - 0.75) / 0.10);
+              var qOp = progress < 0.68 ? 1 : (progress >= 0.78 ? 0 : 1 - (progress - 0.68) / 0.10);
               moQuote.style.opacity = qOp.toFixed(4);
               moQuote.style.transform = 'translate3d(-50%, -50%, 0) scale(' + invScaleX.toFixed(5) + ', ' + invScaleY.toFixed(5) + ')';
             }
           } else {
-            // 전체화면 유지 구간 (0.92 ~ 1.00)
+            // 전체화면 유지 구간 (0.927 ~ 1.000, 기존과 동일한 스크롤 px 거리 유지)
             moVideoBox.style.opacity = '1';
             moVideoBox.style.borderRadius = '0px';
             var invFinalX = 1 / scaleXTargetMO;
