@@ -141,7 +141,7 @@ Figma MCP(`get_design_context`, 스크린샷)로 실제 프레임·레이어 속
 
 | 요소 | 동작 |
 |---|---|
-| Services_core (`data-name="Services_core"`) | **diheir.com 운영 사이트 사양 적용**: <br>• **PC(≥1024px)**: 3500px 스크롤 트랙 동안 `sticky` 고정. diheir.com 원본 수학 공식 기반으로 반응형 스테이지(`scale(min(1, vw/1920))`) 및 프레임(`scale(0.7 → 1.0)` + `clip-path` 확장) 적용. 초기 상태에서 중앙 비디오 및 문구가 0.7 배율로 축소되어 좌우 4개 사이드 이미지와 겹치지 않고 약 60px의 안정적인 여백 유지. 스크롤 진행에 따라 중앙 비디오가 100vw × 100vh로 화면을 빈틈없이 꽉 채우며 확장되고, 좌우 이미지들은 바깥으로 밀려나며 화면 밖으로 퇴장, 중앙 문구는 0.57~1.0 구간에서 부드럽게 페이드아웃.<br>• **모바일(<1024px)**: 500vh 스크롤 영역 동안 `sticky` 고정. 0~0.8 구간 4개 이미지 순차 크로스페이드 전환, 0.8 비디오 카드 등장, 0.9~1.0 구간 카드 형태에서 화면 전체(100vw × 100vh, `borderRadius 8px → 0px`)로 전면 확대. |
+| Services_core (`data-name="Services_core"`) | **diheir.com 원본 사양 유지 + 태블릿/모바일 GPU 가속 최적화**: <br>• **PC & 태블릿 가로(≥1024px)**: 300vh 스크롤 트랙 동안 `sticky` 고정. 기존 매 프레임 `clip-path: inset(...)` 소프트웨어 래스터화 병목을 제거하고, GPU 하드웨어 가속 `scale(clipScaleX, clipScaleY)` 및 내부 영상 역보정(`scale(1/clipScaleX, 1/clipScaleY)`) 구조로 전환하여 찌그러짐 없이 화면 전체로 확장. 중앙 프레임 `scale(0.7 → 1.0)`, 4개 사이드 카드 좌우 슬라이드, 텍스트 페이드아웃(`progress 0.52~0.92`) 원본 사양 보존.<br>• **모바일 & 태블릿 세로(<1024px)**: 450vh 스크롤 동안 `sticky` 고정. 0~0.73 구간 4개 카드 순차 크로스페이드 전환. 0.70~0.73 비디오 카드 페이드인. **0.73~0.92 구간 매 프레임 width/height 리플로우를 제거하고 GPU `scale(scaleX, scaleY)`로 전환**, 내부 비디오와 텍스트 문구에 역보정(`scale(1/scaleX, 1/scaleY)`)을 적용하여 비율 왜곡/찌그러짐을 100% 방지. 0.92~1.00 전체화면 유지 및 역방향 스크롤 완벽 지원. iframe 16:9 커버 크기는 resize 시 1회만 계산.<br>• **단일 스트림 및 리소스 관리**: PC용과 MO용 Vimeo iframe을 분리하고 활성 모드에만 `src`를 할당, 비활성 iframe은 `src=""`로 해제하여 듀얼 디코딩 방지. `IntersectionObserver`로 화면 이탈 시 postMessage 일시정지, 재진입 시 재생 복귀하여 검은 화면/반복 로딩 없이 GPU 자원 보존.<br>• **주소창 튐 방지 및 회전 리셋**: 스크롤 중 모바일 주소창 출몰(너비 불변, 높이 미세 변화)과 실제 화면 회전을 구분하여 progress 튐 방지. 화면 회전 시 이전 모드의 인라인 스타일을 완전 초기화(`resetStaleStyles`). |
 | Services_Designer 카드 슬라이더 | **diheir.com 원본 사양 적용 (무한 슬라이드 & 호버 오버레이)**: <br>• **무한 슬라이드**: 20세트 카드 복제 및 경계 감지 래핑 스크립트를 통해 좌우 어디로든 끝없이 이어지는 무한 슬라이드 구현. 초기 스크롤 중앙 정렬, 마우스 드래그 가로 스크롤(grab/grabbing), `snap-x mandatory` 스냅.<br>• **호버 시 설명 표시**: 카드 호버(또는 모바일 탭) 시 이미지 미세 줌(`scale 1.05`), 기본 타이틀 페이드아웃, 배경 블러 딤 레이어(`rgba(0,0,0,0.4)` + `blur 20px`)와 함께 영문 타이틀 및 상세 한글 스토리 설명 텍스트 노출.<br>• **모바일**: 터치 스와이프 및 이전/다음 화살표 버튼 연동, 탭 시 설명 토글. |
 | Contact / 히어로 "쇼룸 방문 예약하기" | `#reservation`(diheirspace) 영역으로 이동 |
 | Reservation 버튼 | 네이버 예약 새 창 |
@@ -162,7 +162,7 @@ Figma MCP(`get_design_context`, 스크린샷)로 실제 프레임·레이어 속
 | 지도 이미지 | `https://map.naver.com/p/entry/place/2036509182` (새 창) | 확인된 네이버 지도 장소 URL |
 | 로고 (호버·클릭 시 Drop_Menu) | 드롭다운 메뉴 (`#home`, `#brand`, `#service`, `#collection`, `#reservation`) | 피그마 Drop_Menu 시안 적용. 글라스 효과 및 각 섹션 스무스 스크롤 이동 |
 | 디자이너 카드·컬렉션 카드 | 링크 없음 | 시안에 목적지·모달 지정 없음 |
-| footer "[사업자정보확인]" | 텍스트만 | 연결 URL(공정위 사업자정보 조회 등) 미제공. 확인 필요 |
+| footer "[사업자정보확인]" | 제거됨 | 사용자 요청에 따라 푸터 사업자 정보에서 제거 완료 |
 | floating pill (`.diheir-floating__pill`) | `https://www.diheir.com/board/board.html?code=diheir_board3&page=1&board_cate=&type=i&utm_source=diheir_web&utm_medium=referral&utm_campaign=reservation&utm_content=floating_banner` | 예약 랜딩페이지 기본 진입 (앵커 없음) |
 | floating mo (`.diheir-floating__mo`) | `https://www.diheir.com/board/board.html?code=diheir_board3&page=1&board_cate=&type=i&utm_source=diheir_web&utm_medium=referral&utm_campaign=reservation&utm_content=floating_banner` | 예약 랜딩페이지 기본 진입 (앵커 없음) |
 | floating 카드: 1. 상담 고객 (`consultation`) | `https://www.diheir.com/board/board.html?code=diheir_board3&page=1&board_cate=&type=i&utm_source=diheir_web&utm_medium=referral&utm_campaign=reservation&utm_content=floating_banner&benefit=consultation#benefits` | 랜딩페이지 `#benefits` 이동 + 1번 혜택(상담 고객: 벨벳 보석함·룸스프레이) 자동 열림 |
@@ -257,3 +257,33 @@ Figma MCP(`get_design_context`, 스크린샷)로 실제 프레임·레이어 속
 | 카드 4 (제휴사) | `.diheir-floating__slide[data-benefit="partner"]` | `...&benefit=partner#benefits` 이동 및 랜딩페이지 제휴사 혜택 열림 확인 |
 | 드래그 간섭 | `.diheir-floating__card` | 좌우 드래그/스와이프 시에는 페이지 이동이 차단되고 슬라이드 전환만 동작. 클릭/탭 시에만 이동. 이전/다음 버튼 클릭 시 버블링 차단 유지 |
 | 랜딩페이지 수신 | `public/diheir_landing/index.html` (및 `diheir_landing.html`) | `benefit` 쿼리 파라미터 파싱 → 해당 혜택 아코디언 자동 열림(`aria-expanded="true"`) → 레이아웃 반영 후 `#benefits` 영역으로 부드럽게 스크롤. 파라미터 없거나 오류 시 기본 혜택 화면 유지 |
+
+## 19. Services_core 태블릿/모바일 인터랙션 최적화 및 검수 내역
+
+### 1) 주요 병목 원인 및 해결 내용
+1. **세로 모드 매 프레임 레이아웃 리플로우(Layout Thrashing) 제거**:
+   - 기존: 스크롤 매 프레임마다 `moVideoBox.style.width`, `height`, `borderRadius`를 직접 변경하여 브라우저 강제 레이아웃(Reflow)과 페인트가 끊임없이 발생.
+   - 개선: `width`/`height` 인라인 스타일 수정을 전면 제거하고 GPU 합성 속성인 `transform: translate3d(-50%, -50%, 0) scale(curScaleX, curScaleY)`로 전격 교체.
+   - **왜곡 방지 역보정(Counter-Scaling)**: 가로·세로 비율이 다른 카드가 화면 전체로 확장될 때 비디오와 텍스트가 찌그러지지 않도록, 내부 컨테이너(`.diheir-core__mo-video-inner`)와 텍스트 문구(`.diheir-core__quote`)에 역축척(`scale(1/curScaleX, 1/curScaleY)`)을 동시 적용.
+   - **iframe 레이아웃 고정**: iframe의 `300%` 크기 지정을 제거하고, resize 시에만 16:9 비율 커버 크기를 1회 계산하여 설정.
+
+2. **가로 모드 clip-path 소프트웨어 래스터화 병목 제거**:
+   - 기존: 중앙 `Frame30` 확대와 함께 매 프레임 `clip-path: inset(...)`을 변경하여 WebKit에서 비디오 프레임마다 CPU 소프트웨어 래스터화가 발생.
+   - 개선: `clip-path`를 비활성화하고, GPU 하드웨어 가속 `overflow: hidden` 마스킹 박스(`clipEl`)의 `scale(clipScaleX, clipScaleY)` 및 내부 영상 역보정(`scale(1/clipScaleX, 1/clipScaleY)`) 구조로 단순화하여 동일한 시각 연출을 무비용(Compositor-only)으로 달성.
+
+3. **태블릿 주소창 출몰 시 진행률(Progress) 튐 방지**:
+   - 주소창 출몰로 인한 미세한 높이 변화(너비 불변, 높이 변화 ≤ 120px)는 레이아웃 재계산 및 인라인 스타일 리셋을 건너뛰어 스크롤 도중 progress가 요동치는 현상 방지.
+   - 실제 화면 회전(`orientationchange` 및 너비 변화 발생 시)에는 `resetStaleStyles()`를 실행하여 이전 모드의 인라인 스타일을 완전 제거 후 새 치수 재계산.
+
+4. **단일 비디오 스트림 및 백그라운드 리소스 격리**:
+   - PC용과 MO용 iframe에 `data-src`를 적용하여, 현재 활성화된 레이아웃 1개에만 `src`를 할당하고 비활성 iframe은 `src=""`로 메모리 해제.
+   - `IntersectionObserver`를 통해 코어 섹션 화면 이탈 시 Vimeo player에 `pause` postMessage 전송, 재진입 시 `play` 전송. 화면 재진입 시 비디오가 다시 로딩되거나 검은 화면이 뜨지 않고 즉각 매끄럽게 재개됨.
+
+### 2) 검수 환경 및 결과
+- **에뮬레이션 검수 (Chromium DevTools / iPad Air, iPad Pro, Galaxy Tab, iPhone 14 Pro, Galaxy S20)**:
+  - 태블릿 가로(1024×768, 1194×834, 1366×1024) 및 세로(768×1024, 834×1194, 820×1180)에서 천천히 스크롤, 빠른 스크롤, 역방향 스크롤 진행 시 프레임 드롭 없이 매끄럽게 확장·복귀 확인.
+  - 가로·세로 화면 회전 시 이전 모드 잔여 스타일 없이 정상 크기 재계산 확인.
+  - 섹션 진입/이탈 시 단일 비디오만 활성화되고 중복 로드가 발생하지 않음 확인.
+- **실기기 미확인 사항**:
+  - 실제 물리 iPad 및 Android 태블릿 실기기 상의 렌더러 프레임 레이트는 측정하지 못하였으므로, 실기기 환경에서의 체감 성능은 운영 반영 후 추가 모니터링이 권장됩니다.
+
